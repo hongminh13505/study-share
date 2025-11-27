@@ -35,6 +35,7 @@ public class DocumentController {
     private final FileStorageService fileStorageService;
     private final CommentService commentService;
     private final RatingService ratingService;
+    private final FolderService folderService;
     
     @GetMapping("/view/{id}")
     public String viewDocument(
@@ -99,11 +100,21 @@ public class DocumentController {
     }
     
     @GetMapping("/upload")
-    public String uploadPage(Model model) {
+    public String uploadPage(
+            @RequestParam(required = false) Integer folderId,
+            @AuthenticationPrincipal CustomUserDetails currentUser,
+            Model model) {
+        
         model.addAttribute("document", new Document());
         model.addAttribute("majors", majorService.getAllMajors());
         model.addAttribute("subjects", subjectService.getAllSubjects());
         model.addAttribute("documentTypes", documentTypeService.getAllDocumentTypes());
+        model.addAttribute("folderId", folderId);
+        
+        if (currentUser != null) {
+            model.addAttribute("folders", folderService.getAllUserFolders(currentUser.getUser()));
+        }
+        
         return "documents/upload";
     }
     
@@ -113,6 +124,7 @@ public class DocumentController {
             @RequestParam("file") MultipartFile file,
             @RequestParam("subjectId") Integer subjectId,
             @RequestParam("typeId") Integer typeId,
+            @RequestParam(required = false) Integer folderId,
             @AuthenticationPrincipal CustomUserDetails currentUser,
             RedirectAttributes redirectAttributes) {
         
@@ -133,10 +145,20 @@ public class DocumentController {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy loại tài liệu!")));
             document.setFilePath(filename);
             
+            // Set folder if provided
+            if (folderId != null) {
+                folderService.getFolderById(folderId).ifPresent(document::setFolder);
+            }
+            
             documentService.createDocument(document);
             
             redirectAttributes.addFlashAttribute("successMessage", 
                 "Tải lên thành công! Tài liệu đang chờ duyệt.");
+            
+            // Redirect back to folder if uploaded to folder
+            if (folderId != null) {
+                return "redirect:/documents/my-documents?folderId=" + folderId;
+            }
             return "redirect:/documents/my-documents";
             
         } catch (Exception e) {
@@ -148,18 +170,58 @@ public class DocumentController {
     @GetMapping("/my-documents")
     public String myDocuments(
             @AuthenticationPrincipal CustomUserDetails currentUser,
+            @RequestParam(required = false) Integer folderId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "100") int size,
             Model model) {
         
-        Page<Document> documents = documentService.getDocumentsByUser(
-            currentUser.getUser().getUserId(), PageRequest.of(page, size));
+        User user = currentUser.getUser();
         
-        model.addAttribute("documents", documents);
+        // Get folders
+        model.addAttribute("folders", folderService.getRootFolders(user));
+        
+        // Get documents without folder (root level)
+        Page<Document> documents = documentService.getDocumentsByUser(
+            user.getUserId(), PageRequest.of(page, size));
+        
+        model.addAttribute("documents", documents.getContent());
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", documents.getTotalPages());
+        model.addAttribute("currentFolderId", folderId);
         
         return "documents/my-documents";
+    }
+    
+    @PostMapping("/folders/create")
+    public String createFolder(
+            @RequestParam String folderName,
+            @RequestParam(required = false) Integer parentFolderId,
+            @AuthenticationPrincipal CustomUserDetails currentUser,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            folderService.createFolder(folderName, currentUser.getUser(), parentFolderId);
+            redirectAttributes.addFlashAttribute("successMessage", "Tạo folder thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+        }
+        
+        return "redirect:/documents/my-documents";
+    }
+    
+    @PostMapping("/folders/delete/{id}")
+    public String deleteFolder(
+            @PathVariable Integer id,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            folderService.deleteFolder(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Xóa folder thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+        }
+        
+        return "redirect:/documents/my-documents";
     }
     
     @PostMapping("/rate/{id}")

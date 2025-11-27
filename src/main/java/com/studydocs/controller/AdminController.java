@@ -120,5 +120,35 @@ public class AdminController {
         
         return "redirect:/admin/users";
     }
+    
+    @PostMapping("/users/promote/{id}")
+    public String promoteToAdmin(
+            @PathVariable Integer id,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            userService.promoteToAdmin(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Nâng cấp lên Admin thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/users";
+    }
+    
+    @PostMapping("/users/demote/{id}")
+    public String demoteToUser(
+            @PathVariable Integer id,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            userService.demoteToUser(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Hạ xuống User thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/users";
+    }
 }
 

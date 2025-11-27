@@ -83,5 +83,19 @@ public class UserService {
     public boolean checkPassword(String rawPassword, String encodedPassword) {
         return passwordEncoder.matches(rawPassword, encodedPassword);
     }
+    
+    public void promoteToAdmin(Integer userId) {
+        userRepository.findById(userId).ifPresent(user -> {
+            user.setRole(UserRole.ADMIN);
+            userRepository.save(user);
+        });
+    }
+    
+    public void demoteToUser(Integer userId) {
+        userRepository.findById(userId).ifPresent(user -> {
+            user.setRole(UserRole.USER);
+            userRepository.save(user);
+        });
+    }
 }
 

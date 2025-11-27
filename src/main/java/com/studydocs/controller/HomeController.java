@@ -23,8 +23,8 @@ public class HomeController {
     
     @GetMapping({"/", "/home"})
     public String home(Model model) {
-        Page<Document> latestDocuments = documentService.getLatestDocuments(PageRequest.of(0, 6));
-        Page<Document> popularDocuments = documentService.getMostViewedDocuments(PageRequest.of(0, 6));
+        Page<Document> latestDocuments = documentService.getLatestDocuments(PageRequest.of(0, 5));
+        Page<Document> popularDocuments = documentService.getMostViewedDocuments(PageRequest.of(0, 5));
         
         model.addAttribute("latestDocuments", latestDocuments.getContent());
         model.addAttribute("popularDocuments", popularDocuments.getContent());

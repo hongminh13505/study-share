@@ -3,103 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng nhập - StudyDocs</title>
+    <title>Đăng nhập - StudyShare</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" th:href="@{/css/login-modern.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="login-modern-page">
-    <div class="login-modern-container">
-        <div class="login-modern-card">
-            <div class="login-header">
-                <a th:href="@{/home}" class="logo-modern">
-                    <i class="fas fa-book-open"></i> StudyDocs
-                </a>
-                <h2 class="login-title">Đăng nhập</h2>
-                <p class="login-subtitle">Chào mừng bạn trở lại!</p>
+<body class="auth-page">
+    <div class="auth-container">
+        <!-- Left Side - Brand -->
+        <div class="auth-left">
+            <div class="auth-logo-section">
+                <div class="auth-logo-large">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <h1 class="auth-brand-name">StudyShare</h1>
+                <p class="auth-brand-description">Hệ thống chia sẻ tài liệu học tập</p>
             </div>
-            
-            <!-- Error/Success Messages -->
-            <div th:if="${param.error}" class="alert alert-danger">
-                <i class="fas fa-exclamation-circle"></i> 
-                <span>Tên đăng nhập hoặc mật khẩu không đúng!</span>
-            </div>
-            
-            <div th:if="${param.logout}" class="alert alert-success">
-                <i class="fas fa-check-circle"></i> 
-                <span>Đăng xuất thành công!</span>
-            </div>
-            
-            <div th:if="${successMessage}" class="alert alert-success">
-                <i class="fas fa-check-circle"></i> 
-                <span th:text="${successMessage}"></span>
-            </div>
-            
-            <!-- Role Selector -->
-            <div class="role-selector">
-                <p class="role-label">Chọn vai trò và đăng nhập</p>
-                <div class="role-grid">
-                    <div class="role-card" data-role="user" onclick="selectRole('user')">
-                        <div class="role-icon">
-                            <i class="fas fa-user-graduate"></i>
-                        </div>
-                        <p class="role-name">Cư dân</p>
+        </div>
+        
+        <!-- Right Side - Login Form -->
+        <div class="auth-right">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h2>Đăng nhập</h2>
+                    <p>Chào mừng bạn trở lại!</p>
+                </div>
+                
+                <!-- Error/Success Messages -->
+                <div th:if="${param.error}" class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i> 
+                    <span>Tên đăng nhập hoặc mật khẩu không đúng!</span>
+                </div>
+                
+                <div th:if="${successMessage}" class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> 
+                    <span th:text="${successMessage}"></span>
+                </div>
+                
+                <!-- Login Form -->
+                <form th:action="@{/login}" method="post" class="auth-form" id="loginForm">
+                    
+                    <div class="form-group">
+                        <label for="username">Tên đăng nhập</label>
+                        <input type="text" 
+                               id="username" 
+                               name="username" 
+                               class="form-control" 
+                               placeholder="Nhập tên đăng nhập"
+                               required>
                     </div>
                     
-                    <div class="role-card" data-role="admin" onclick="selectRole('admin')">
-                        <div class="role-icon admin-icon">
-                            <i class="fas fa-user-shield"></i>
-                        </div>
-                        <p class="role-name">Quản trị</p>
+                    <div class="form-group">
+                        <label for="password">Mật khẩu</label>
+                        <input type="password" 
+                               id="password" 
+                               name="password" 
+                               class="form-control" 
+                               placeholder="Nhập mật khẩu"
+                               required>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Login Form -->
-            <form th:action="@{/login}" method="post" class="login-modern-form" id="loginForm">
-                <input type="hidden" id="selectedRole" name="role" value="">
-                
-                <div class="form-group-modern">
-                    <input type="text" 
-                           id="username" 
-                           name="username" 
-                           class="form-control-modern" 
-                           placeholder="Tên đăng nhập"
-                           required>
-                </div>
-                
-                <div class="form-group-modern password-group">
-                    <input type="password" 
-                           id="password" 
-                           name="password" 
-                           class="form-control-modern" 
-                           placeholder="Mật khẩu"
-                           required>
-                    <button type="button" class="password-toggle" onclick="togglePassword()">
-                        <i class="fas fa-eye" id="toggleIcon"></i>
+                    
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="remember-me">
+                            <span>Ghi nhớ đăng nhập</span>
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-sign-in-alt"></i> Đăng nhập
                     </button>
-                </div>
+                </form>
                 
-                <div class="form-group-modern">
-                    <label class="checkbox-label-modern">
-                        <input type="checkbox" name="remember-me">
-                        <span>Ghi nhớ đăng nhập</span>
-                    </label>
+                <div class="auth-footer">
+                    <p>Chưa có tài khoản? <a th:href="@{/register}">Đăng ký ngay</a></p>
+                    <p><a th:href="@{/home}">Quay lại trang chủ</a></p>
                 </div>
-                
-                <button type="submit" class="btn-modern btn-primary-modern">
-                    <i class="fas fa-sign-in-alt"></i> Đăng nhập
-                </button>
-            </form>
-            
-            <div class="login-footer">
-                <p>Chưa có tài khoản? <a th:href="@{/register}" class="link-primary">Đăng ký ngay</a></p>
-                <p><a th:href="@{/home}" class="link-secondary">Quay lại trang chủ</a></p>
             </div>
         </div>
     </div>
     
-    <script th:src="@{/js/login-modern.js}"></script>
 </body>
 </html>
-
