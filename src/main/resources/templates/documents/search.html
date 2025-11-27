@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tìm kiếm tài liệu - StudyDocs</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a th:href="@{/home}" class="logo">
+                    <i class="fas fa-book-open"></i> StudyDocs
+                </a>
+            </div>
+            
+            <div class="nav-menu">
+                <a th:href="@{/home}" class="nav-link">
+                    <i class="fas fa-home"></i> Trang chủ
+                </a>
+                <a th:href="@{/documents/search}" class="nav-link active">
+                    <i class="fas fa-search"></i> Tìm kiếm
+                </a>
+                
+                <div sec:authorize="isAuthenticated()">
+                    <a th:href="@{/documents/upload}" class="nav-link">
+                        <i class="fas fa-upload"></i> Tải lên
+                    </a>
+                    <span class="nav-link">
+                        <i class="fas fa-user-circle"></i>
+                        <span sec:authentication="principal.user.fullName">User</span>
+                    </span>
+                </div>
+                
+                <div sec:authorize="!isAuthenticated()">
+                    <a th:href="@{/login}" class="btn btn-primary">Đăng nhập</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Search Section -->
+    <section class="search-section">
+        <div class="container">
+            <div class="search-box">
+                <form th:action="@{/documents/search}" method="get" class="search-form">
+                    <input type="text" name="keyword" th:value="${keyword}" 
+                           placeholder="Tìm kiếm tài liệu..." class="search-input">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Tìm kiếm
+                    </button>
+                </form>
+            </div>
+            
+            <div class="filters">
+                <select name="majorId" id="majorFilter" class="form-control" onchange="loadSubjects(this.value)">
+                    <option value="">Tất cả chuyên ngành</option>
+                    <option th:each="major : ${majors}" 
+                            th:value="${major.majorId}" 
+                            th:text="${major.majorName}"
+                            th:selected="${selectedMajorId == major.majorId}">
+                    </option>
+                </select>
+                
+                <select name="subjectId" id="subjectFilter" class="form-control">
+                    <option value="">Tất cả môn học</option>
+                    <option th:each="subject : ${subjects}" 
+                            th:value="${subject.subjectId}" 
+                            th:text="${subject.subjectName}"
+                            th:selected="${selectedSubjectId == subject.subjectId}">
+                    </option>
+                </select>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Results Section -->
+    <section class="results-section">
+        <div class="container">
+            <div class="results-header">
+                <h2>Kết quả tìm kiếm</h2>
+                <p>Tìm thấy <strong th:text="${documents.totalElements}">0</strong> tài liệu</p>
+            </div>
+            
+            <div class="document-grid">
+                <div th:each="doc : ${documents.content}" class="document-card">
+                    <div class="document-header">
+                        <h3 class="document-title">
+                            <a th:href="@{/documents/view/{id}(id=${doc.documentId})}" 
+                               th:text="${doc.documentName}">
+                                Tên tài liệu
+                            </a>
+                        </h3>
+                    </div>
+                    
+                    <div class="document-meta">
+                        <span class="badge" th:text="${doc.type.typeName}">Loại</span>
+                        <span class="badge badge-secondary" th:text="${doc.subject.subjectName}">Môn học</span>
+                    </div>
+                    
+                    <p class="document-description" th:text="${doc.description}">Mô tả</p>
+                    
+                    <div class="document-stats">
+                        <span><i class="fas fa-star text-warning"></i> 
+                            <span th:text="${#numbers.formatDecimal(doc.averageRating, 1, 1)}">0.0</span>
+                        </span>
+                        <span><i class="fas fa-eye"></i> <span th:text="${doc.viewCount}">0</span></span>
+                        <span><i class="fas fa-download"></i> <span th:text="${doc.downloadCount}">0</span></span>
+                    </div>
+                    
+                    <div class="document-actions">
+                        <a th:href="@{/documents/view/{id}(id=${doc.documentId})}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-eye"></i> Xem chi tiết
+                        </a>
+                        <a th:href="@{/documents/download/{id}(id=${doc.documentId})}" class="btn btn-sm btn-success">
+                            <i class="fas fa-download"></i> Tải xuống
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pagination -->
+            <div th:if="${documents.totalPages > 1}" class="pagination">
+                <a th:if="${currentPage > 0}" 
+                   th:href="@{/documents/search(keyword=${keyword},page=${currentPage-1})}" 
+                   class="btn btn-outline">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </a>
+                
+                <span class="page-info">
+                    Trang <strong th:text="${currentPage + 1}">1</strong> / <strong th:text="${totalPages}">1</strong>
+                </span>
+                
+                <a th:if="${currentPage < totalPages - 1}" 
+                   th:href="@{/documents/search(keyword=${keyword},page=${currentPage+1})}" 
+                   class="btn btn-outline">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 StudyDocs. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <script th:src="@{/js/main.js}"></script>
+    <script>
+        function loadSubjects(majorId) {
+            if (majorId) {
+                fetch('/api/subjects/by-major/' + majorId)
+                    .then(response => response.json())
+                    .then(subjects => {
+                        const subjectFilter = document.getElementById('subjectFilter');
+                        subjectFilter.innerHTML = '<option value="">Tất cả môn học</option>';
+                        subjects.forEach(subject => {
+                            subjectFilter.innerHTML += `<option value="${subject.subjectId}">${subject.subjectName}</option>`;
+                        });
+                    });
+            }
+        }
+    </script>
+</body>
+</html>
+

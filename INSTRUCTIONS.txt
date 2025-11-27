@@ -1,0 +1,136 @@
+================================================================================
+                     HƯỚNG DẪN SỬ DỤNG STUDYDOCS
+                  Web Chia Sẻ Tài Liệu Học Tập
+================================================================================
+
+📋 YÊU CẦU HỆ THỐNG:
+  ✓ Java 17 trở lên
+  ✓ PostgreSQL 12 trở lên
+  ✓ Maven 3.6 trở lên
+
+================================================================================
+
+🚀 CÁCH 1: CHẠY TỰ ĐỘNG (KHUYẾN NGHỊ)
+
+Windows:
+  1. Double-click file "run.bat"
+  2. Đợi build xong
+  3. Mở trình duyệt: http://localhost:8080
+
+Linux/macOS:
+  1. chmod +x run.sh
+  2. ./run.sh
+  3. Mở trình duyệt: http://localhost:8080
+
+================================================================================
+
+🛠️ CÁCH 2: CHẠY THỦ CÔNG
+
+Bước 1: Tạo Database
+  psql -U postgres
+  CREATE DATABASE study_docs_db;
+  \q
+  psql -U postgres -d study_docs_db -f database_schema.sql
+
+Bước 2: Cấu hình
+  Mở: src/main/resources/application.yml
+  Sửa username và password PostgreSQL (dòng 10-11)
+
+Bước 3: Tạo thư mục uploads
+  mkdir uploads
+
+Bước 4: Chạy
+  mvn spring-boot:run
+
+Bước 5: Truy cập
+  http://localhost:8080
+
+================================================================================
+
+👤 TÀI KHOẢN MẶC ĐỊNH:
+
+Admin:
+  Username: admin
+  Password: admin123
+  
+Hoặc đăng ký tài khoản mới tại: http://localhost:8080/register
+
+================================================================================
+
+📚 CÁC TÍNH NĂNG:
+
+Người dùng thường:
+  ✓ Tìm kiếm tài liệu
+  ✓ Xem & tải tài liệu
+  ✓ Đánh giá tài liệu
+  ✓ Bình luận
+  ✓ Upload tài liệu
+  ✓ Quản lý tài liệu của mình
+
+Admin:
+  ✓ Dashboard thống kê
+  ✓ Duyệt/Từ chối tài liệu
+  ✓ Quản lý người dùng
+  ✓ Khóa/Mở khóa tài khoản
+
+================================================================================
+
+⚠️ KHẮC PHỤC SỰ CỐ:
+
+Lỗi: Connection refused
+  → PostgreSQL chưa chạy
+  → Giải pháp: Start PostgreSQL service
+
+Lỗi: Port 8080 đã sử dụng
+  → Đổi port trong application.yml (dòng 41)
+  → server.port: 8081
+
+Lỗi: Cannot create uploads directory
+  → Tạo thủ công: mkdir uploads
+
+Lỗi: Authentication failed
+  → Kiểm tra username/password trong application.yml
+
+================================================================================
+
+📖 TÀI LIỆU THAM KHẢO:
+
+- README.md          : Hướng dẫn tổng quan đầy đủ
+- QUICKSTART.md      : Hướng dẫn nhanh 5 phút
+- SETUP.md           : Hướng dẫn chi tiết từng bước
+- PROJECT_SUMMARY.md : Tổng kết dự án, tính năng
+
+================================================================================
+
+🌐 CẤU TRÚC URL:
+
+Trang chủ:              http://localhost:8080/
+Đăng nhập:              http://localhost:8080/login
+Đăng ký:                http://localhost:8080/register
+Tìm kiếm:               http://localhost:8080/documents/search
+Tải lên:                http://localhost:8080/documents/upload
+Admin Dashboard:        http://localhost:8080/admin/dashboard
+
+================================================================================
+
+💡 MẸO SỬ DỤNG:
+
+1. Upload file hỗ trợ: PDF, DOC, DOCX, PPT, PPTX (Max 50MB)
+2. Sử dụng tags để dễ tìm kiếm tài liệu
+3. Đánh giá tài liệu để giúp người khác
+4. Tài liệu cần được admin duyệt trước khi hiển thị công khai
+
+================================================================================
+
+📞 HỖ TRỢ:
+
+Email: support@studydocs.com
+Website: https://studydocs.com
+
+================================================================================
+
+© 2024 StudyDocs. All rights reserved.
+Made with ❤️ for students
+
+================================================================================
+

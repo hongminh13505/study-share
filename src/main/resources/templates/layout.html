@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle != null ? pageTitle + ' - StudyDocs' : 'StudyDocs - Chia sẻ tài liệu học tập'}">StudyDocs</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a th:href="@{/home}" class="logo">
+                    <i class="fas fa-book-open"></i> StudyDocs
+                </a>
+            </div>
+            
+            <div class="nav-menu">
+                <a th:href="@{/home}" class="nav-link">
+                    <i class="fas fa-home"></i> Trang chủ
+                </a>
+                <a th:href="@{/documents/search}" class="nav-link">
+                    <i class="fas fa-search"></i> Tìm kiếm
+                </a>
+                
+                <div sec:authorize="isAuthenticated()">
+                    <a th:href="@{/documents/upload}" class="nav-link">
+                        <i class="fas fa-upload"></i> Tải lên
+                    </a>
+                    <a th:href="@{/documents/my-documents}" class="nav-link">
+                        <i class="fas fa-folder"></i> Tài liệu của tôi
+                    </a>
+                    
+                    <div sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/admin/dashboard}" class="nav-link">
+                            <i class="fas fa-shield-alt"></i> Quản trị
+                        </a>
+                    </div>
+                    
+                    <div class="dropdown">
+                        <a href="#" class="nav-link dropdown-toggle">
+                            <i class="fas fa-user-circle"></i>
+                            <span sec:authentication="principal.user.fullName">User</span>
+                        </a>
+                        <div class="dropdown-menu">
+                            <a th:href="@{/profile}" class="dropdown-item">
+                                <i class="fas fa-user"></i> Thông tin cá nhân
+                            </a>
+                            <hr class="dropdown-divider">
+                            <form th:action="@{/logout}" method="post" style="display: inline;">
+                                <button type="submit" class="dropdown-item">
+                                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div sec:authorize="!isAuthenticated()">
+                    <a th:href="@{/login}" class="nav-link">
+                        <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                    </a>
+                    <a th:href="@{/register}" class="btn btn-primary">
+                        Đăng ký
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="main-content" th:fragment="content">
+        <!-- Content will be inserted here -->
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3><i class="fas fa-book-open"></i> StudyDocs</h3>
+                    <p>Nền tảng chia sẻ tài liệu học tập miễn phí dành cho sinh viên</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Liên kết</h4>
+                    <ul>
+                        <li><a th:href="@{/home}">Trang chủ</a></li>
+                        <li><a th:href="@{/documents/search}">Tìm kiếm tài liệu</a></li>
+                        <li><a th:href="@{/about}">Giới thiệu</a></li>
+                        <li><a th:href="@{/contact}">Liên hệ</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Hỗ trợ</h4>
+                    <ul>
+                        <li><a href="#">Hướng dẫn sử dụng</a></li>
+                        <li><a href="#">Câu hỏi thường gặp</a></li>
+                        <li><a href="#">Chính sách</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 StudyDocs. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script th:src="@{/js/main.js}"></script>
+</body>
+</html>
+

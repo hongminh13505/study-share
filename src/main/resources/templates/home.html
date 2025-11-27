@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang chủ - StudyDocs</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a th:href="@{/home}" class="logo">
+                    <i class="fas fa-book-open"></i> StudyDocs
+                </a>
+            </div>
+            
+            <div class="nav-menu">
+                <a th:href="@{/home}" class="nav-link active">
+                    <i class="fas fa-home"></i> Trang chủ
+                </a>
+                <a th:href="@{/documents/search}" class="nav-link">
+                    <i class="fas fa-search"></i> Tìm kiếm
+                </a>
+                
+                <div sec:authorize="isAuthenticated()">
+                    <a th:href="@{/documents/upload}" class="nav-link">
+                        <i class="fas fa-upload"></i> Tải lên
+                    </a>
+                    <a th:href="@{/documents/my-documents}" class="nav-link">
+                        <i class="fas fa-folder"></i> Tài liệu của tôi
+                    </a>
+                    
+                    <div sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/admin/dashboard}" class="nav-link">
+                            <i class="fas fa-shield-alt"></i> Quản trị
+                        </a>
+                    </div>
+                    
+                    <span class="nav-link">
+                        <i class="fas fa-user-circle"></i>
+                        <span sec:authentication="principal.user.fullName">User</span>
+                    </span>
+                    <form th:action="@{/logout}" method="post" style="display: inline;">
+                        <button type="submit" class="btn btn-sm btn-outline">
+                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                        </button>
+                    </form>
+                </div>
+                
+                <div sec:authorize="!isAuthenticated()">
+                    <a th:href="@{/login}" class="nav-link">
+                        <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                    </a>
+                    <a th:href="@{/register}" class="btn btn-primary">
+                        Đăng ký
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">Chia sẻ và tìm kiếm tài liệu học tập</h1>
+                <p class="hero-subtitle">Hàng ngàn tài liệu học tập miễn phí từ sinh viên cho sinh viên</p>
+                
+                <div class="search-box">
+                    <form th:action="@{/documents/search}" method="get" class="search-form">
+                        <input type="text" name="keyword" placeholder="Tìm kiếm tài liệu, môn học..." class="search-input">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Tìm kiếm
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Categories Section -->
+    <section class="categories">
+        <div class="container">
+            <h2 class="section-title">Chuyên ngành</h2>
+            <div class="category-grid">
+                <a th:each="major : ${majors}" 
+                   th:href="@{/documents/search(majorId=${major.majorId})}" 
+                   class="category-card">
+                    <i class="fas fa-graduation-cap"></i>
+                    <h3 th:text="${major.majorName}">Chuyên ngành</h3>
+                    <p th:text="${major.description}">Mô tả</p>
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Latest Documents -->
+    <section class="latest-documents">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Tài liệu mới nhất</h2>
+                <a th:href="@{/documents/search}" class="btn btn-outline">Xem tất cả</a>
+            </div>
+            
+            <div class="document-grid">
+                <div th:each="doc : ${latestDocuments}" class="document-card">
+                    <div class="document-header">
+                        <h3 class="document-title">
+                            <a th:href="@{/documents/view/{id}(id=${doc.documentId})}" 
+                               th:text="${doc.documentName}">
+                                Tên tài liệu
+                            </a>
+                        </h3>
+                    </div>
+                    
+                    <div class="document-meta">
+                        <span class="badge" th:text="${doc.type.typeName}">Loại</span>
+                        <span class="badge badge-secondary" th:text="${doc.subject.subjectName}">Môn học</span>
+                    </div>
+                    
+                    <p class="document-description" th:text="${doc.description}">Mô tả tài liệu</p>
+                    
+                    <div class="document-stats">
+                        <span><i class="fas fa-star text-warning"></i> 
+                            <span th:text="${#numbers.formatDecimal(doc.averageRating, 1, 1)}">0.0</span>
+                            (<span th:text="${doc.ratingCount}">0</span>)
+                        </span>
+                        <span><i class="fas fa-eye"></i> <span th:text="${doc.viewCount}">0</span></span>
+                        <span><i class="fas fa-download"></i> <span th:text="${doc.downloadCount}">0</span></span>
+                    </div>
+                    
+                    <div class="document-footer">
+                        <span class="text-muted">
+                            <i class="fas fa-user"></i> 
+                            <span th:text="${doc.user.fullName}">Người đăng</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Popular Documents -->
+    <section class="popular-documents">
+        <div class="container">
+            <h2 class="section-title">Tài liệu phổ biến</h2>
+            
+            <div class="document-grid">
+                <div th:each="doc : ${popularDocuments}" class="document-card">
+                    <div class="document-header">
+                        <h3 class="document-title">
+                            <a th:href="@{/documents/view/{id}(id=${doc.documentId})}" 
+                               th:text="${doc.documentName}">
+                                Tên tài liệu
+                            </a>
+                        </h3>
+                    </div>
+                    
+                    <div class="document-meta">
+                        <span class="badge" th:text="${doc.type.typeName}">Loại</span>
+                        <span class="badge badge-secondary" th:text="${doc.subject.subjectName}">Môn học</span>
+                    </div>
+                    
+                    <p class="document-description" th:text="${doc.description}">Mô tả tài liệu</p>
+                    
+                    <div class="document-stats">
+                        <span><i class="fas fa-star text-warning"></i> 
+                            <span th:text="${#numbers.formatDecimal(doc.averageRating, 1, 1)}">0.0</span>
+                            (<span th:text="${doc.ratingCount}">0</span>)
+                        </span>
+                        <span><i class="fas fa-eye"></i> <span th:text="${doc.viewCount}">0</span></span>
+                        <span><i class="fas fa-download"></i> <span th:text="${doc.downloadCount}">0</span></span>
+                    </div>
+                    
+                    <div class="document-footer">
+                        <span class="text-muted">
+                            <i class="fas fa-user"></i> 
+                            <span th:text="${doc.user.fullName}">Người đăng</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3><i class="fas fa-book-open"></i> StudyDocs</h3>
+                    <p>Nền tảng chia sẻ tài liệu học tập miễn phí dành cho sinh viên</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Liên kết</h4>
+                    <ul>
+                        <li><a th:href="@{/home}">Trang chủ</a></li>
+                        <li><a th:href="@{/documents/search}">Tìm kiếm tài liệu</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 StudyDocs. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script th:src="@{/js/main.js}"></script>
+</body>
+</html>
+

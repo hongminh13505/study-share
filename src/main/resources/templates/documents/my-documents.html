@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài liệu của tôi - StudyDocs</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a th:href="@{/home}" class="logo">
+                    <i class="fas fa-book-open"></i> StudyDocs
+                </a>
+            </div>
+            <div class="nav-menu">
+                <a th:href="@{/home}" class="nav-link"><i class="fas fa-home"></i> Trang chủ</a>
+                <a th:href="@{/documents/my-documents}" class="nav-link active">
+                    <i class="fas fa-folder"></i> Tài liệu của tôi
+                </a>
+            </div>
+        </div>
+    </nav>
+    
+    <section class="my-documents-section">
+        <div class="container">
+            <div class="section-header">
+                <h1>Tài liệu của tôi</h1>
+                <a th:href="@{/documents/upload}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Tải lên tài liệu mới
+                </a>
+            </div>
+            
+            <div class="documents-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tên tài liệu</th>
+                            <th>Môn học</th>
+                            <th>Loại</th>
+                            <th>Trạng thái</th>
+                            <th>Lượt xem</th>
+                            <th>Lượt tải</th>
+                            <th>Ngày đăng</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="doc : ${documents.content}">
+                            <td><strong th:text="${doc.documentName}">Tên tài liệu</strong></td>
+                            <td th:text="${doc.subject.subjectName}">Môn học</td>
+                            <td th:text="${doc.type.typeName}">Loại</td>
+                            <td>
+                                <span class="badge" 
+                                      th:classappend="${doc.status.name() == 'APPROVED' ? 'badge-success' : 
+                                                       doc.status.name() == 'PENDING' ? 'badge-warning' : 
+                                                       doc.status.name() == 'REJECTED' ? 'badge-danger' : ''}"
+                                      th:text="${doc.status}">
+                                </span>
+                            </td>
+                            <td th:text="${doc.viewCount}">0</td>
+                            <td th:text="${doc.downloadCount}">0</td>
+                            <td th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy')}">01/01/2024</td>
+                            <td>
+                                <a th:href="@{/documents/view/{id}(id=${doc.documentId})}" 
+                                   class="btn btn-sm btn-info" title="Xem">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div th:if="${documents.totalPages > 1}" class="pagination">
+                <a th:if="${currentPage > 0}" 
+                   th:href="@{/documents/my-documents(page=${currentPage-1})}" 
+                   class="btn btn-outline">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </a>
+                
+                <span class="page-info">
+                    Trang <strong th:text="${currentPage + 1}">1</strong> / <strong th:text="${totalPages}">1</strong>
+                </span>
+                
+                <a th:if="${currentPage < totalPages - 1}" 
+                   th:href="@{/documents/my-documents(page=${currentPage+1})}" 
+                   class="btn btn-outline">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 StudyDocs. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
+

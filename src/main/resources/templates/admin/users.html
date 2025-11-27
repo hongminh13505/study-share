@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý người dùng - Admin</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a th:href="@{/home}" class="logo">
+                    <i class="fas fa-book-open"></i> StudyDocs - Admin
+                </a>
+            </div>
+            <div class="nav-menu">
+                <a th:href="@{/admin/dashboard}" class="nav-link">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a th:href="@{/admin/documents/pending}" class="nav-link">
+                    <i class="fas fa-clock"></i> Duyệt tài liệu
+                </a>
+                <a th:href="@{/admin/users}" class="nav-link active">
+                    <i class="fas fa-users"></i> Người dùng
+                </a>
+                <a th:href="@{/home}" class="nav-link">
+                    <i class="fas fa-home"></i> Về trang chủ
+                </a>
+            </div>
+        </div>
+    </nav>
+    
+    <section class="admin-users">
+        <div class="container">
+            <h1 class="page-title">Quản lý người dùng</h1>
+            
+            <div th:if="${successMessage}" class="alert alert-success">
+                <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+            </div>
+            
+            <div th:if="${errorMessage}" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+            </div>
+            
+            <div class="documents-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Họ tên</th>
+                            <th>Vai trò</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày tạo</th>
+                            <th>Lần đăng nhập cuối</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="user : ${users}">
+                            <td th:text="${user.userId}">1</td>
+                            <td><strong th:text="${user.username}">username</strong></td>
+                            <td th:text="${user.email}">email@example.com</td>
+                            <td th:text="${user.fullName}">Họ tên</td>
+                            <td>
+                                <span class="badge" 
+                                      th:classappend="${user.role.name() == 'ADMIN' ? 'badge-danger' : 'badge-info'}"
+                                      th:text="${user.role}">
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge" 
+                                      th:classappend="${user.status.name() == 'ACTIVE' ? 'badge-success' : 'badge-danger'}"
+                                      th:text="${user.status}">
+                                </span>
+                            </td>
+                            <td th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy')}">01/01/2024</td>
+                            <td th:text="${user.lastLogin != null ? #temporals.format(user.lastLogin, 'dd/MM/yyyy HH:mm') : 'Chưa đăng nhập'}">
+                                N/A
+                            </td>
+                            <td>
+                                <div th:if="${user.role.name() != 'ADMIN'}">
+                                    <form th:if="${user.status.name() == 'ACTIVE'}" 
+                                          th:action="@{/admin/users/lock/{id}(id=${user.userId})}" 
+                                          method="post" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-warning" title="Khóa">
+                                            <i class="fas fa-lock"></i>
+                                        </button>
+                                    </form>
+                                    
+                                    <form th:if="${user.status.name() == 'LOCKED'}" 
+                                          th:action="@{/admin/users/unlock/{id}(id=${user.userId})}" 
+                                          method="post" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-success" title="Mở khóa">
+                                            <i class="fas fa-unlock"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                                <span th:if="${user.role.name() == 'ADMIN'}" class="text-muted">
+                                    <i class="fas fa-shield-alt"></i> Admin
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+    
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 StudyDocs. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
+

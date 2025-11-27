@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${document.documentName} + ' - StudyDocs'">Tài liệu - StudyDocs</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a th:href="@{/home}" class="logo">
+                    <i class="fas fa-book-open"></i> StudyDocs
+                </a>
+            </div>
+            <div class="nav-menu">
+                <a th:href="@{/home}" class="nav-link"><i class="fas fa-home"></i> Trang chủ</a>
+                <a th:href="@{/documents/search}" class="nav-link"><i class="fas fa-search"></i> Tìm kiếm</a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Document Details -->
+    <section class="document-detail">
+        <div class="container">
+            <div class="document-header">
+                <h1 th:text="${document.documentName}">Tên tài liệu</h1>
+                
+                <div class="document-meta">
+                    <span class="badge badge-large" th:text="${document.type.typeName}">Loại</span>
+                    <span class="badge badge-secondary badge-large" th:text="${document.subject.subjectName}">Môn học</span>
+                    <span class="badge badge-info badge-large" th:text="${document.status}">Trạng thái</span>
+                </div>
+            </div>
+            
+            <div class="document-info">
+                <div class="info-row">
+                    <span class="info-label"><i class="fas fa-user"></i> Người đăng:</span>
+                    <span th:text="${document.user.fullName}">Tên người dùng</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label"><i class="fas fa-calendar"></i> Ngày đăng:</span>
+                    <span th:text="${#temporals.format(document.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label"><i class="fas fa-eye"></i> Lượt xem:</span>
+                    <span th:text="${document.viewCount}">0</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label"><i class="fas fa-download"></i> Lượt tải:</span>
+                    <span th:text="${document.downloadCount}">0</span>
+                </div>
+            </div>
+            
+            <div class="document-description">
+                <h3>Mô tả</h3>
+                <p th:text="${document.description}">Mô tả tài liệu</p>
+            </div>
+            
+            <div class="document-tags" th:if="${document.tags}">
+                <h3>Tags</h3>
+                <div class="tags">
+                    <span th:each="tag : ${document.tags.split(',')}" 
+                          class="tag" th:text="${tag.trim()}">Tag</span>
+                </div>
+            </div>
+            
+            <!-- Rating -->
+            <div class="rating-section">
+                <h3>Đánh giá</h3>
+                <div class="rating-display">
+                    <div class="average-rating">
+                        <i class="fas fa-star text-warning"></i>
+                        <span class="rating-value" th:text="${#numbers.formatDecimal(document.averageRating, 1, 1)}">0.0</span>
+                        <span class="rating-count" th:text="'(' + ${document.ratingCount} + ' đánh giá)'"></span>
+                    </div>
+                </div>
+                
+                <div sec:authorize="isAuthenticated()" class="rating-input">
+                    <p>Đánh giá của bạn:</p>
+                    <div class="stars" id="ratingStars">
+                        <i class="far fa-star" data-rating="1"></i>
+                        <i class="far fa-star" data-rating="2"></i>
+                        <i class="far fa-star" data-rating="3"></i>
+                        <i class="far fa-star" data-rating="4"></i>
+                        <i class="far fa-star" data-rating="5"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="document-actions">
+                <a th:href="@{/documents/download/{id}(id=${document.documentId})}" 
+                   class="btn btn-success btn-large">
+                    <i class="fas fa-download"></i> Tải xuống tài liệu
+                </a>
+            </div>
+            
+            <!-- Comments Section -->
+            <div class="comments-section">
+                <h3>Bình luận (<span th:text="${commentCount}">0</span>)</h3>
+                
+                <div sec:authorize="isAuthenticated()" class="comment-form">
+                    <form th:action="@{/comments/add}" method="post">
+                        <input type="hidden" name="documentId" th:value="${document.documentId}">
+                        <textarea name="content" class="form-control" rows="3" 
+                                  placeholder="Viết bình luận..." required></textarea>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-comment"></i> Gửi bình luận
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="comments-list">
+                    <div th:each="comment : ${comments}" class="comment">
+                        <div class="comment-header">
+                            <strong th:text="${comment.user.fullName}">Người dùng</strong>
+                            <span class="comment-date" 
+                                  th:text="${#temporals.format(comment.createdAt, 'dd/MM/yyyy HH:mm')}">
+                                01/01/2024
+                            </span>
+                        </div>
+                        <div class="comment-content" th:text="${comment.content}">Nội dung bình luận</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 StudyDocs. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const stars = document.querySelectorAll('#ratingStars i');
+            const documentId = /*[[${document.documentId}]]*/ 0;
+            
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const rating = this.getAttribute('data-rating');
+                    
+                    fetch(`/documents/rate/${documentId}?rating=${rating}`, {
+                        method: 'POST'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        document.querySelector('.rating-value').textContent = data.averageRating.toFixed(1);
+                        document.querySelector('.rating-count').textContent = `(${data.ratingCount} đánh giá)`;
+                        
+                        stars.forEach((s, i) => {
+                            if (i < rating) {
+                                s.classList.remove('far');
+                                s.classList.add('fas');
+                            } else {
+                                s.classList.remove('fas');
+                                s.classList.add('far');
+                            }
+                        });
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
