@@ -33,11 +33,11 @@ public class Document {
     private Folder folder;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "subject_id", nullable = false)
+    @JoinColumn(name = "subject_id")
     private Subject subject;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "type_id", nullable = false)
+    @JoinColumn(name = "type_id")
     private DocumentType type;
     
     @Column(name = "document_name", nullable = false, length = 200)

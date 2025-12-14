@@ -1,16 +1,15 @@
 package com.studydocs.repository;
 
 import com.studydocs.model.entity.Notification;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.studydocs.model.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Integer> {
-    
-    Page<Notification> findByUser_UserIdOrderByCreatedAtDesc(Integer userId, Pageable pageable);
-    
-    long countByUser_UserIdAndIsRead(Integer userId, Boolean isRead);
+    List<Notification> findByUserOrderByCreatedAtDesc(User user);
+    List<Notification> findByUserAndIsReadFalseOrderByCreatedAtDesc(User user);
+    long countByUserAndIsReadFalse(User user);
 }
-
