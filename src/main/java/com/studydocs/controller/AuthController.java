@@ -10,6 +10,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -20,8 +21,8 @@ public class AuthController {
     
     @GetMapping("/login")
     public String loginPage(
-            @ModelAttribute("error") String error,
-            @ModelAttribute("logout") String logout,
+            @RequestParam(value = "error", required = false) String error,
+            @RequestParam(value = "logout", required = false) String logout,
             Model model) {
         if (error != null) {
             model.addAttribute("errorMessage", "Tên đăng nhập hoặc mật khẩu không đúng!");

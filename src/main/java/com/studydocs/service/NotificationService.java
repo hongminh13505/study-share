@@ -1,31 +1,44 @@
 package com.studydocs.service;
 
 import com.studydocs.model.entity.Notification;
+import com.studydocs.model.entity.User;
 import com.studydocs.repository.NotificationRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.util.List;
 
 @Service
-@RequiredArgsConstructor
-@Transactional
 public class NotificationService {
     
-    private final NotificationRepository notificationRepository;
+    @Autowired
+    private NotificationRepository notificationRepository;
     
-    public Notification createNotification(Notification notification) {
+    public void createNotification(User user, String title, String message, String type, Integer documentId) {
+        Notification notification = new Notification();
+        notification.setUser(user);
+        notification.setTitle(title);
+        notification.setMessage(message);
+        notification.setType(type);
+        notification.setDocumentId(documentId);
         notification.setIsRead(false);
-        return notificationRepository.save(notification);
+        notificationRepository.save(notification);
     }
     
-    public Page<Notification> getNotificationsByUser(Integer userId, Pageable pageable) {
-        return notificationRepository.findByUser_UserIdOrderByCreatedAtDesc(userId, pageable);
+    public List<Notification> getUserNotifications(User user) {
+        return notificationRepository.findByUserOrderByCreatedAtDesc(user);
     }
     
+    public List<Notification> getUnreadNotifications(User user) {
+        return notificationRepository.findByUserAndIsReadFalseOrderByCreatedAtDesc(user);
+    }
+    
+    public long countUnreadNotifications(User user) {
+        return notificationRepository.countByUserAndIsReadFalse(user);
+    }
+    
+    @Transactional
     public void markAsRead(Integer notificationId) {
         notificationRepository.findById(notificationId).ifPresent(notification -> {
             notification.setIsRead(true);
@@ -33,21 +46,12 @@ public class NotificationService {
         });
     }
     
-    public void markAllAsRead(Integer userId) {
-        Page<Notification> notifications = notificationRepository.findByUser_UserIdOrderByCreatedAtDesc(
-            userId, Pageable.unpaged());
-        notifications.forEach(notification -> {
+    @Transactional
+    public void markAllAsRead(User user) {
+        List<Notification> unread = notificationRepository.findByUserAndIsReadFalseOrderByCreatedAtDesc(user);
+        unread.forEach(notification -> {
             notification.setIsRead(true);
             notificationRepository.save(notification);
         });
     }
-    
-    public long countUnreadNotifications(Integer userId) {
-        return notificationRepository.countByUser_UserIdAndIsRead(userId, false);
-    }
-    
-    public Optional<Notification> findById(Integer id) {
-        return notificationRepository.findById(id);
-    }
 }
-

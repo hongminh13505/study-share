@@ -54,20 +54,12 @@
                 <i class="fas fa-search"></i>
                 <span>Tìm kiếm</span>
             </a>
-            <a href="#" class="sidebar-link" sec:authorize="isAuthenticated()">
-                <i class="fas fa-chart-line"></i>
-                <span>Thống kê</span>
-            </a>
             
             <div class="sidebar-divider"></div>
             
-            <a href="#" class="sidebar-link">
-                <i class="fas fa-clock"></i>
-                <span>Gần đây</span>
-            </a>
-            <a href="#" class="sidebar-link">
-                <i class="fas fa-book"></i>
-                <span>Môn học</span>
+            <a th:href="@{/majors}" class="sidebar-link">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Tài liệu theo ngành học</span>
             </a>
             
             <div sec:authorize="hasRole('ADMIN')">
@@ -102,6 +94,21 @@
             </div>
             
             <div class="header-actions" sec:authorize="isAuthenticated()">
+                <!-- Notification Bell -->
+                <div class="notification-wrapper">
+                    <button class="notification-btn" onclick="toggleNotifications()">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h4>Thông báo</h4>
+                        </div>
+                        <div class="notification-list" id="notificationList">
+                            <div class="notification-empty">Không có thông báo</div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="header-user-dropdown">
                     <button class="header-user-btn" onclick="toggleDropdown()">
                         <i class="fas fa-user-circle"></i>
@@ -109,7 +116,7 @@
                         <i class="fas fa-chevron-down"></i>
                     </button>
                     <div class="dropdown-menu" id="userDropdown">
-                        <a href="#" class="dropdown-item">
+                        <a th:href="@{/profile}" class="dropdown-item">
                             <i class="fas fa-user"></i>
                             Thông tin cá nhân
                         </a>
@@ -183,37 +190,71 @@
                     </a>
                 </div>
                 
-                <div class="document-scroll-horizontal">
-                    <div th:each="doc : ${latestDocuments}" class="document-card-new">
-                        <a th:href="@{/documents/view/{id}(id=${doc.documentId})}" class="document-link">
-                            <div class="document-thumbnail">
-                                <i class="fas fa-file-pdf"></i>
-                                <span class="document-pages">
-                                    <span th:text="${doc.viewCount}">0</span>
+                <div class="document-scroll-horizontal-home" th:if="${latestDocuments != null and !latestDocuments.isEmpty()}">
+                    <div th:each="doc : ${latestDocuments}" class="document-card-home-horizontal">
+                        <!-- Menu Button -->
+                        <button class="card-menu-btn-home" type="button">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        
+                        <!-- File Icon -->
+                        <div class="document-preview-home" 
+                             th:classappend="${doc.filePath != null && doc.filePath.toLowerCase().endsWith('.pdf') ? 'preview-pdf' : 
+                                          (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.doc') || doc.filePath.toLowerCase().endsWith('.docx'))) || doc.documentName.toLowerCase().endsWith('.doc') || doc.documentName.toLowerCase().endsWith('.docx') ? 'preview-doc' :
+                                          (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.xls') || doc.filePath.toLowerCase().endsWith('.xlsx'))) || doc.documentName.toLowerCase().endsWith('.xls') || doc.documentName.toLowerCase().endsWith('.xlsx') ? 'preview-xls' :
+                                          (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.ppt') || doc.filePath.toLowerCase().endsWith('.pptx'))) || doc.documentName.toLowerCase().endsWith('.ppt') || doc.documentName.toLowerCase().endsWith('.pptx') ? 'preview-ppt' : ''}">
+                            <div class="preview-placeholder">
+                                <i class="fas" 
+                                   th:classappend="${doc.filePath != null && doc.filePath.toLowerCase().endsWith('.pdf') ? 'fa-file-pdf' : 
+                                                    (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.doc') || doc.filePath.toLowerCase().endsWith('.docx'))) || doc.documentName.toLowerCase().endsWith('.doc') || doc.documentName.toLowerCase().endsWith('.docx') ? 'fa-file-word' :
+                                                    (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.xls') || doc.filePath.toLowerCase().endsWith('.xlsx'))) || doc.documentName.toLowerCase().endsWith('.xls') || doc.documentName.toLowerCase().endsWith('.xlsx') ? 'fa-file-excel' :
+                                                    (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.ppt') || doc.filePath.toLowerCase().endsWith('.pptx'))) || doc.documentName.toLowerCase().endsWith('.ppt') || doc.documentName.toLowerCase().endsWith('.pptx') ? 'fa-file-powerpoint' : 'fa-file'}"></i>
+                                <span class="preview-label" 
+                                      th:text="${doc.filePath != null && doc.filePath.toLowerCase().endsWith('.pdf') ? 'PDF' : 
+                                                (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.doc') || doc.filePath.toLowerCase().endsWith('.docx'))) || doc.documentName.toLowerCase().endsWith('.doc') || doc.documentName.toLowerCase().endsWith('.docx') ? 'DOC' :
+                                                (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.xls') || doc.filePath.toLowerCase().endsWith('.xlsx'))) || doc.documentName.toLowerCase().endsWith('.xls') || doc.documentName.toLowerCase().endsWith('.xlsx') ? 'XLS' :
+                                                (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.ppt') || doc.filePath.toLowerCase().endsWith('.pptx'))) || doc.documentName.toLowerCase().endsWith('.ppt') || doc.documentName.toLowerCase().endsWith('.pptx') ? 'PPT' : 'FILE'}">PDF</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Document Info -->
+                        <div class="document-info-home">
+                            <h3 class="document-title-home">
+                                <a th:href="@{/documents/view/{id}(id=${doc.documentId})}" 
+                                   th:text="${doc.documentName}">
+                                    Tên tài liệu
+                                </a>
+                            </h3>
+                            
+                            <div class="document-meta-home">
+                                <span class="meta-item">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <span th:text="${#numbers.formatDecimal(doc.averageRating != null ? doc.averageRating : 0.0, 1, 1)}">0.0</span>
+                                </span>
+                                <span class="meta-separator">•</span>
+                                <span class="meta-item">
+                                    <i class="fas fa-download"></i>
+                                    <span th:text="${doc.downloadCount}">0</span>
                                 </span>
                             </div>
-                            <div class="document-info-new">
-                                <h3 class="document-title-new" th:text="${doc.documentName}">Tên tài liệu</h3>
-                                <p class="document-author" th:text="${doc.user.fullName}">Tác giả</p>
-                            </div>
-                        </a>
-                        <button class="document-save">
-                            <i class="far fa-bookmark"></i>
-                            Save
-                        </button>
+                        </div>
                     </div>
+                </div>
+                
+                <div th:if="${latestDocuments == null or latestDocuments.isEmpty()}" class="no-documents-message">
+                    <p>Chưa có tài liệu mới nào được duyệt.</p>
                 </div>
             </section>
             
             <!-- Recently Viewed / Majors -->
             <section class="document-section">
                 <div class="section-header-new">
-                    <h2 class="section-title-new">Chuyên ngành</h2>
+                    <h2 class="section-title-new">Tài liệu theo ngành học</h2>
                 </div>
                 
                 <div class="major-grid-horizontal">
                     <div th:each="major : ${majors}" class="major-card">
-                        <a th:href="@{/documents/search(majorId=${major.majorId})}" class="major-link">
+                        <a th:href="@{/admin/majors(majorId=${major.majorId})}" class="major-link">
                             <div class="major-icon">
                                 <i class="fas fa-folder"></i>
                             </div>
@@ -230,32 +271,129 @@
             <section class="document-section">
                 <div class="section-header-new">
                     <h2 class="section-title-new">Tài liệu phổ biến</h2>
+                    <a th:href="@{/documents/search}" class="view-all-link">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
                 </div>
                 
-                <div class="document-scroll-horizontal">
-                    <div th:each="doc : ${popularDocuments}" class="document-card-new">
-                        <a th:href="@{/documents/view/{id}(id=${doc.documentId})}" class="document-link">
-                            <div class="document-thumbnail">
-                                <i class="fas fa-file-pdf"></i>
-                                <span class="document-pages">
+                <div class="document-scroll-horizontal-home" th:if="${popularDocuments != null and !popularDocuments.isEmpty()}">
+                    <div th:each="doc : ${popularDocuments}" class="document-card-home-horizontal">
+                        <!-- Menu Button -->
+                        <button class="card-menu-btn-home" type="button">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        
+                        <!-- File Icon -->
+                        <div class="document-preview-home" 
+                             th:classappend="${doc.filePath != null && doc.filePath.toLowerCase().endsWith('.pdf') ? 'preview-pdf' : 
+                                          (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.doc') || doc.filePath.toLowerCase().endsWith('.docx'))) || doc.documentName.toLowerCase().endsWith('.doc') || doc.documentName.toLowerCase().endsWith('.docx') ? 'preview-doc' :
+                                          (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.xls') || doc.filePath.toLowerCase().endsWith('.xlsx'))) || doc.documentName.toLowerCase().endsWith('.xls') || doc.documentName.toLowerCase().endsWith('.xlsx') ? 'preview-xls' :
+                                          (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.ppt') || doc.filePath.toLowerCase().endsWith('.pptx'))) || doc.documentName.toLowerCase().endsWith('.ppt') || doc.documentName.toLowerCase().endsWith('.pptx') ? 'preview-ppt' : ''}">
+                            <div class="preview-placeholder">
+                                <i class="fas" 
+                                   th:classappend="${doc.filePath != null && doc.filePath.toLowerCase().endsWith('.pdf') ? 'fa-file-pdf' : 
+                                                    (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.doc') || doc.filePath.toLowerCase().endsWith('.docx'))) || doc.documentName.toLowerCase().endsWith('.doc') || doc.documentName.toLowerCase().endsWith('.docx') ? 'fa-file-word' :
+                                                    (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.xls') || doc.filePath.toLowerCase().endsWith('.xlsx'))) || doc.documentName.toLowerCase().endsWith('.xls') || doc.documentName.toLowerCase().endsWith('.xlsx') ? 'fa-file-excel' :
+                                                    (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.ppt') || doc.filePath.toLowerCase().endsWith('.pptx'))) || doc.documentName.toLowerCase().endsWith('.ppt') || doc.documentName.toLowerCase().endsWith('.pptx') ? 'fa-file-powerpoint' : 'fa-file'}"></i>
+                                <span class="preview-label" 
+                                      th:text="${doc.filePath != null && doc.filePath.toLowerCase().endsWith('.pdf') ? 'PDF' : 
+                                                (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.doc') || doc.filePath.toLowerCase().endsWith('.docx'))) || doc.documentName.toLowerCase().endsWith('.doc') || doc.documentName.toLowerCase().endsWith('.docx') ? 'DOC' :
+                                                (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.xls') || doc.filePath.toLowerCase().endsWith('.xlsx'))) || doc.documentName.toLowerCase().endsWith('.xls') || doc.documentName.toLowerCase().endsWith('.xlsx') ? 'XLS' :
+                                                (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.ppt') || doc.filePath.toLowerCase().endsWith('.pptx'))) || doc.documentName.toLowerCase().endsWith('.ppt') || doc.documentName.toLowerCase().endsWith('.pptx') ? 'PPT' : 'FILE'}">PDF</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Document Info -->
+                        <div class="document-info-home">
+                            <h3 class="document-title-home">
+                                <a th:href="@{/documents/view/{id}(id=${doc.documentId})}" 
+                                   th:text="${doc.documentName}">
+                                    Tên tài liệu
+                                </a>
+                            </h3>
+                            
+                            <div class="document-meta-home">
+                                <span class="meta-item">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <span th:text="${#numbers.formatDecimal(doc.averageRating != null ? doc.averageRating : 0.0, 1, 1)}">0.0</span>
+                                </span>
+                                <span class="meta-separator">•</span>
+                                <span class="meta-item">
+                                    <i class="fas fa-download"></i>
                                     <span th:text="${doc.downloadCount}">0</span>
                                 </span>
                             </div>
-                            <div class="document-info-new">
-                                <h3 class="document-title-new" th:text="${doc.documentName}">Tên tài liệu</h3>
-                                <p class="document-author" th:text="${doc.user.fullName}">Tác giả</p>
-                                <div class="document-rating">
-                                    <i class="fas fa-thumbs-up"></i>
-                                    <span>100%</span>
-                                    <span class="rating-count">(<span th:text="${doc.ratingCount}">4</span>)</span>
-                                </div>
-                            </div>
-                        </a>
-                        <button class="document-save">
-                            <i class="far fa-bookmark"></i>
-                            Save
-                        </button>
+                        </div>
                     </div>
+                </div>
+                
+                <div th:if="${popularDocuments == null or popularDocuments.isEmpty()}" class="no-documents-message">
+                    <p>Chưa có tài liệu phổ biến.</p>
+                </div>
+            </section>
+            
+            <!-- Top Rated Documents / Tài liệu yêu thích -->
+            <section class="document-section">
+                <div class="section-header-new">
+                    <h2 class="section-title-new">Tài liệu yêu thích</h2>
+                    <a th:href="@{/documents/search(sortBy='rating')}" class="view-all-link">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+                
+                <div class="document-scroll-horizontal-home" th:if="${topRatedDocuments != null and !topRatedDocuments.isEmpty()}">
+                    <div th:each="doc : ${topRatedDocuments}" class="document-card-home-horizontal">
+                        <!-- Menu Button -->
+                        <button class="card-menu-btn-home" type="button">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        
+                        <!-- File Icon -->
+                        <div class="document-preview-home" 
+                             th:classappend="${doc.filePath != null && doc.filePath.toLowerCase().endsWith('.pdf') ? 'preview-pdf' : 
+                                          (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.doc') || doc.filePath.toLowerCase().endsWith('.docx'))) || doc.documentName.toLowerCase().endsWith('.doc') || doc.documentName.toLowerCase().endsWith('.docx') ? 'preview-doc' :
+                                          (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.xls') || doc.filePath.toLowerCase().endsWith('.xlsx'))) || doc.documentName.toLowerCase().endsWith('.xls') || doc.documentName.toLowerCase().endsWith('.xlsx') ? 'preview-xls' :
+                                          (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.ppt') || doc.filePath.toLowerCase().endsWith('.pptx'))) || doc.documentName.toLowerCase().endsWith('.ppt') || doc.documentName.toLowerCase().endsWith('.pptx') ? 'preview-ppt' : ''}">
+                            <div class="preview-placeholder">
+                                <i class="fas" 
+                                   th:classappend="${doc.filePath != null && doc.filePath.toLowerCase().endsWith('.pdf') ? 'fa-file-pdf' : 
+                                                    (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.doc') || doc.filePath.toLowerCase().endsWith('.docx'))) || doc.documentName.toLowerCase().endsWith('.doc') || doc.documentName.toLowerCase().endsWith('.docx') ? 'fa-file-word' :
+                                                    (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.xls') || doc.filePath.toLowerCase().endsWith('.xlsx'))) || doc.documentName.toLowerCase().endsWith('.xls') || doc.documentName.toLowerCase().endsWith('.xlsx') ? 'fa-file-excel' :
+                                                    (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.ppt') || doc.filePath.toLowerCase().endsWith('.pptx'))) || doc.documentName.toLowerCase().endsWith('.ppt') || doc.documentName.toLowerCase().endsWith('.pptx') ? 'fa-file-powerpoint' : 'fa-file'}"></i>
+                                <span class="preview-label" 
+                                      th:text="${doc.filePath != null && doc.filePath.toLowerCase().endsWith('.pdf') ? 'PDF' : 
+                                                (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.doc') || doc.filePath.toLowerCase().endsWith('.docx'))) || doc.documentName.toLowerCase().endsWith('.doc') || doc.documentName.toLowerCase().endsWith('.docx') ? 'DOC' :
+                                                (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.xls') || doc.filePath.toLowerCase().endsWith('.xlsx'))) || doc.documentName.toLowerCase().endsWith('.xls') || doc.documentName.toLowerCase().endsWith('.xlsx') ? 'XLS' :
+                                                (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.ppt') || doc.filePath.toLowerCase().endsWith('.pptx'))) || doc.documentName.toLowerCase().endsWith('.ppt') || doc.documentName.toLowerCase().endsWith('.pptx') ? 'PPT' : 'FILE'}">PDF</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Document Info -->
+                        <div class="document-info-home">
+                            <h3 class="document-title-home">
+                                <a th:href="@{/documents/view/{id}(id=${doc.documentId})}" 
+                                   th:text="${doc.documentName}">
+                                    Tên tài liệu
+                                </a>
+                            </h3>
+                            
+                            <div class="document-meta-home">
+                                <span class="meta-item">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <span th:text="${#numbers.formatDecimal(doc.averageRating != null ? doc.averageRating : 0.0, 1, 1)}">0.0</span>
+                                </span>
+                                <span class="meta-separator">•</span>
+                                <span class="meta-item">
+                                    <i class="fas fa-download"></i>
+                                    <span th:text="${doc.downloadCount}">0</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div th:if="${topRatedDocuments == null or topRatedDocuments.isEmpty()}" class="no-documents-message">
+                    <p>Chưa có tài liệu được đánh giá.</p>
                 </div>
             </section>
         </div>
@@ -266,10 +404,13 @@
         function toggleDropdown() {
             var dropdown = document.getElementById('userDropdown');
             dropdown.classList.toggle('show');
+            // Close notification dropdown
+            var notifDropdown = document.getElementById('notificationDropdown');
+            if (notifDropdown) notifDropdown.classList.remove('show');
         }
         
-        // Close dropdown when clicking outside
-        window.onclick = function(event) {
+        // Close user dropdown when clicking outside
+        document.addEventListener('click', function(event) {
             if (!event.target.matches('.header-user-btn') && !event.target.matches('.header-user-btn *')) {
                 var dropdowns = document.getElementsByClassName('dropdown-menu');
                 for (var i = 0; i < dropdowns.length; i++) {
@@ -279,7 +420,7 @@
                     }
                 }
             }
-        }
+        });
     </script>
 </body>
 </html>

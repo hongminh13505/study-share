@@ -11,15 +11,17 @@ CREATE TABLE IF NOT EXISTS folders (
     user_id INT NOT NULL,
     parent_folder_id INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (parent_folder_id) REFERENCES folders(folder_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Thêm cột folder_id vào bảng documents
 ALTER TABLE documents 
-ADD COLUMN folder_id INT NULL AFTER user_id,
-ADD FOREIGN KEY (folder_id) REFERENCES folders(folder_id) ON DELETE SET NULL;
+ADD COLUMN folder_id INT NULL;
+
+-- Thêm foreign key
+ALTER TABLE documents
+ADD CONSTRAINT fk_documents_folder FOREIGN KEY (folder_id) REFERENCES folders(folder_id) ON DELETE SET NULL;
 
 -- Tạo index để tăng tốc truy vấn
 CREATE INDEX idx_folders_user_id ON folders(user_id);

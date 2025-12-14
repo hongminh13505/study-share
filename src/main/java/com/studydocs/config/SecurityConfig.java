@@ -45,7 +45,8 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/home", "/login", "/register", "/css/**", "/js/**", "/images/**").permitAll()
-                .requestMatchers("/documents/search", "/documents/view/**", "/documents/download/**").permitAll()
+                .requestMatchers("/documents/search", "/documents/view/**", "/documents/download/**", "/documents/preview/**").permitAll()
+                .requestMatchers("/majors", "/majors/**").authenticated()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/documents/upload", "/documents/my-documents").authenticated()
                 .anyRequest().authenticated()
@@ -59,13 +60,10 @@ public class SecurityConfig {
             )
             .logout(logout -> logout
                 .logoutUrl("/logout")
-                .logoutSuccessUrl("/login")
+                .logoutSuccessUrl("/login?logout=true")
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
                 .permitAll()
-            )
-            .exceptionHandling(ex -> ex
-                .accessDeniedPage("/access-denied")
             )
             .sessionManagement(session -> session
                 .maximumSessions(1)

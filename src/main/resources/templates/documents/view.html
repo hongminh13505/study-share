@@ -3,173 +3,533 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title th:text="${document.documentName} + ' - StudyDocs'">Tài liệu - StudyDocs</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
-                <a th:href="@{/home}" class="logo">
-                    <i class="fas fa-book-open"></i> StudyDocs
-                </a>
-            </div>
-            <div class="nav-menu">
-                <a th:href="@{/home}" class="nav-link"><i class="fas fa-home"></i> Trang chủ</a>
-                <a th:href="@{/documents/search}" class="nav-link"><i class="fas fa-search"></i> Tìm kiếm</a>
-            </div>
-        </div>
-    </nav>
+<body class="studocu-layout">
     
-    <!-- Document Details -->
-    <section class="document-detail">
-        <div class="container">
-            <div class="document-header">
-                <h1 th:text="${document.documentName}">Tên tài liệu</h1>
-                
-                <div class="document-meta">
-                    <span class="badge badge-large" th:text="${document.type.typeName}">Loại</span>
-                    <span class="badge badge-secondary badge-large" th:text="${document.subject.subjectName}">Môn học</span>
-                    <span class="badge badge-info badge-large" th:text="${document.status}">Trạng thái</span>
-                </div>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <!-- User Profile Section -->
+        <div class="sidebar-user" sec:authorize="isAuthenticated()">
+            <div class="user-avatar">
+                <i class="fas fa-user-circle"></i>
             </div>
-            
-            <div class="document-info">
-                <div class="info-row">
-                    <span class="info-label"><i class="fas fa-user"></i> Người đăng:</span>
-                    <span th:text="${document.user.fullName}">Tên người dùng</span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="info-label"><i class="fas fa-calendar"></i> Ngày đăng:</span>
-                    <span th:text="${#temporals.format(document.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024</span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="info-label"><i class="fas fa-eye"></i> Lượt xem:</span>
-                    <span th:text="${document.viewCount}">0</span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="info-label"><i class="fas fa-download"></i> Lượt tải:</span>
-                    <span th:text="${document.downloadCount}">0</span>
-                </div>
+            <div class="user-info">
+                <h3 class="user-name" sec:authentication="principal.user.fullName">User</h3>
             </div>
-            
-            <div class="document-description">
-                <h3>Mô tả</h3>
-                <p th:text="${document.description}">Mô tả tài liệu</p>
+            <a th:href="@{/documents/upload}" class="btn-new">
+                <i class="fas fa-plus"></i> New
+            </a>
+        </div>
+        
+        <!-- Guest User Section -->
+        <div class="sidebar-guest" sec:authorize="!isAuthenticated()">
+            <div class="guest-avatar">
+                <i class="fas fa-user-circle"></i>
             </div>
+            <p class="guest-text">Đăng nhập để trải nghiệm đầy đủ</p>
+            <a th:href="@{/login}" class="btn-login">
+                <i class="fas fa-sign-in-alt"></i> Đăng nhập
+            </a>
+            <a th:href="@{/register}" class="btn-register">Đăng ký</a>
+        </div>
+        
+        <!-- Navigation Menu -->
+        <nav class="sidebar-nav">
+            <a th:href="@{/home}" class="sidebar-link">
+                <i class="fas fa-home"></i>
+                <span>Trang chủ</span>
+            </a>
+            <a th:href="@{/documents/upload}" class="sidebar-link" sec:authorize="isAuthenticated()">
+                <i class="fas fa-upload"></i>
+                <span>Tải lên</span>
+            </a>
+            <a th:href="@{/documents/my-documents}" class="sidebar-link" sec:authorize="isAuthenticated()">
+                <i class="fas fa-folder"></i>
+                <span>Tài liệu của tôi</span>
+            </a>
+            <a th:href="@{/documents/search}" class="sidebar-link">
+                <i class="fas fa-search"></i>
+                <span>Tìm kiếm</span>
+            </a>
             
-            <div class="document-tags" th:if="${document.tags}">
-                <h3>Tags</h3>
-                <div class="tags">
-                    <span th:each="tag : ${document.tags.split(',')}" 
-                          class="tag" th:text="${tag.trim()}">Tag</span>
-                </div>
-            </div>
+            <div class="sidebar-divider"></div>
             
-            <!-- Rating -->
-            <div class="rating-section">
-                <h3>Đánh giá</h3>
-                <div class="rating-display">
-                    <div class="average-rating">
-                        <i class="fas fa-star text-warning"></i>
-                        <span class="rating-value" th:text="${#numbers.formatDecimal(document.averageRating, 1, 1)}">0.0</span>
-                        <span class="rating-count" th:text="'(' + ${document.ratingCount} + ' đánh giá)'"></span>
-                    </div>
-                </div>
-                
-                <div sec:authorize="isAuthenticated()" class="rating-input">
-                    <p>Đánh giá của bạn:</p>
-                    <div class="stars" id="ratingStars">
-                        <i class="far fa-star" data-rating="1"></i>
-                        <i class="far fa-star" data-rating="2"></i>
-                        <i class="far fa-star" data-rating="3"></i>
-                        <i class="far fa-star" data-rating="4"></i>
-                        <i class="far fa-star" data-rating="5"></i>
-                    </div>
-                </div>
-            </div>
+            <a th:href="@{/majors}" class="sidebar-link">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Tài liệu theo ngành học</span>
+            </a>
             
-            <!-- Actions -->
-            <div class="document-actions">
-                <a th:href="@{/documents/download/{id}(id=${document.documentId})}" 
-                   class="btn btn-success btn-large">
-                    <i class="fas fa-download"></i> Tải xuống tài liệu
+            <div sec:authorize="hasRole('ADMIN')">
+                <div class="sidebar-divider"></div>
+                <a th:href="@{/admin/documents/pending}" class="sidebar-link">
+                    <i class="fas fa-clipboard-check"></i>
+                    <span>Quản lý tài liệu</span>
+                </a>
+                <a th:href="@{/admin/users}" class="sidebar-link">
+                    <i class="fas fa-users-cog"></i>
+                    <span>Quản lý người dùng</span>
                 </a>
             </div>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="header-logo">
+                <i class="fas fa-book-open"></i>
+                <span>StudyShare</span>
+            </div>
             
-            <!-- Comments Section -->
-            <div class="comments-section">
-                <h3>Bình luận (<span th:text="${commentCount}">0</span>)</h3>
-                
-                <div sec:authorize="isAuthenticated()" class="comment-form">
-                    <form th:action="@{/comments/add}" method="post">
-                        <input type="hidden" name="documentId" th:value="${document.documentId}">
-                        <textarea name="content" class="form-control" rows="3" 
-                                  placeholder="Viết bình luận..." required></textarea>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-comment"></i> Gửi bình luận
-                        </button>
-                    </form>
-                </div>
-                
-                <div class="comments-list">
-                    <div th:each="comment : ${comments}" class="comment">
-                        <div class="comment-header">
-                            <strong th:text="${comment.user.fullName}">Người dùng</strong>
-                            <span class="comment-date" 
-                                  th:text="${#temporals.format(comment.createdAt, 'dd/MM/yyyy HH:mm')}">
-                                01/01/2024
-                            </span>
+            <div class="header-search">
+                <form th:action="@{/documents/search}" method="get" class="search-form-inline">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" name="keyword" placeholder="Tìm kiếm tài liệu, môn học..." class="search-input-inline">
+                </form>
+            </div>
+            
+            <div class="header-actions" sec:authorize="isAuthenticated()">
+                <!-- Notification Bell -->
+                <div class="notification-wrapper">
+                    <button class="notification-btn" onclick="toggleNotifications()">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h4>Thông báo</h4>
                         </div>
-                        <div class="comment-content" th:text="${comment.content}">Nội dung bình luận</div>
+                        <div class="notification-list" id="notificationList">
+                            <div class="notification-empty">Không có thông báo</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="header-user-dropdown">
+                    <button class="header-user-btn" onclick="toggleDropdown()">
+                        <i class="fas fa-user-circle"></i>
+                        <span sec:authentication="principal.user.fullName">User</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="dropdown-menu" id="userDropdown">
+                        <a th:href="@{/profile}" class="dropdown-item">
+                            <i class="fas fa-user"></i>
+                            Thông tin cá nhân
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <form th:action="@{/logout}" method="post">
+                            <button type="submit" class="dropdown-item logout-item">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Đăng xuất
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="header-actions" sec:authorize="!isAuthenticated()">
+                <a th:href="@{/login}" class="header-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Đăng nhập
+                </a>
+            </div>
+        </header>
+        
+        <!-- Content Area - TikTok Style Layout -->
+        <div class="content-area document-view-container">
+            <div class="document-view-layout">
+                <!-- Left Column: Document Preview -->
+                <div class="document-view-left">
+                    <div class="preview-container-tiktok">
+                        <div th:if="${document.filePath != null && (document.filePath.toLowerCase().endsWith('.pdf') || document.documentName.toLowerCase().endsWith('.pdf'))}" class="document-preview-wrapper-tiktok">
+                            <div class="preview-loading-tiktok" id="previewLoading">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Đang tải xem trước...</p>
+                            </div>
+                            <iframe th:src="@{/documents/preview/{id}(id=${document.documentId})}" 
+                                    class="document-preview-iframe-tiktok" 
+                                    frameborder="0"
+                                    id="documentPreviewIframe"
+                                    onload="document.getElementById('previewLoading').style.display='none';">
+                            </iframe>
+                        </div>
+                        <div th:unless="${document.filePath != null && (document.filePath.toLowerCase().endsWith('.pdf') || document.documentName.toLowerCase().endsWith('.pdf'))}" class="document-preview-placeholder-tiktok">
+                            <div class="preview-placeholder-content-tiktok">
+                                <i class="fas" 
+                                   th:classappend="${(document.filePath != null && (document.filePath.toLowerCase().endsWith('.doc') || document.filePath.toLowerCase().endsWith('.docx'))) || document.documentName.toLowerCase().endsWith('.doc') || document.documentName.toLowerCase().endsWith('.docx') ? 'fa-file-word' : 
+                                                    (document.filePath != null && (document.filePath.toLowerCase().endsWith('.xls') || document.filePath.toLowerCase().endsWith('.xlsx'))) || document.documentName.toLowerCase().endsWith('.xls') || document.documentName.toLowerCase().endsWith('.xlsx') ? 'fa-file-excel' :
+                                                    (document.filePath != null && (document.filePath.toLowerCase().endsWith('.ppt') || document.filePath.toLowerCase().endsWith('.pptx'))) || document.documentName.toLowerCase().endsWith('.ppt') || document.documentName.toLowerCase().endsWith('.pptx') ? 'fa-file-powerpoint' : 'fa-file'}"></i>
+                                <h3 th:text="${document.documentName}">Tên tài liệu</h3>
+                                <p>Xem trước không khả dụng cho loại file này. Vui lòng tải xuống để xem.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column: Document Info, Rating, Comments -->
+                <div class="document-view-right">
+                    <!-- Document Name -->
+                    <div class="document-info-header">
+                        <h1 class="document-view-title" th:text="${document.documentName}">Tên tài liệu</h1>
+                    </div>
+                    
+                    <!-- Download Button -->
+                    <div class="download-button-container">
+                        <a th:href="@{/documents/download/{id}(id=${document.documentId})}" 
+                           class="btn-download-rectangle">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                    </div>
+                    
+                    <!-- Rating Section -->
+                    <div class="rating-section-tiktok">
+                        <!-- Rating Display -->
+                        <div class="rating-display-tiktok">
+                            <div class="average-rating-tiktok">
+                                <div class="rating-stars-display" id="averageStarsDisplay">
+                                    <!-- Stars will be rendered by JavaScript -->
+                                </div>
+                                <span class="rating-value-tiktok" th:text="${#numbers.formatDecimal(document.averageRating != null ? document.averageRating : 0.0, 1, 1)}">0.0</span>
+                                <span class="rating-count-tiktok" th:text="'(' + ${document.ratingCount != null ? document.ratingCount : 0} + ')'">(0)</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Rating Input -->
+                        <div sec:authorize="isAuthenticated()" class="rating-input-tiktok">
+                            <p class="rating-label">Đánh giá của bạn</p>
+                            <div class="stars-tiktok" id="ratingStars">
+                                <i class="far fa-star" data-rating="1"></i>
+                                <i class="far fa-star" data-rating="2"></i>
+                                <i class="far fa-star" data-rating="3"></i>
+                                <i class="far fa-star" data-rating="4"></i>
+                                <i class="far fa-star" data-rating="5"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Comments Section -->
+                    <div class="comments-section-tiktok">
+                        <h3 class="comments-title-tiktok">Bình luận (<span th:text="${commentCount}">0</span>)</h3>
+                        
+                        <div sec:authorize="isAuthenticated()" class="comment-form-tiktok">
+                            <form th:action="@{/comments/add}" method="post">
+                                <input type="hidden" name="documentId" th:value="${document.documentId}">
+                                <textarea name="content" class="comment-input-tiktok" 
+                                          placeholder="Thêm bình luận..." required></textarea>
+                                <button type="submit" class="btn-comment-submit">
+                                    Đăng
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <div class="comments-list-tiktok">
+                            <div th:each="comment : ${comments}" class="comment-tiktok">
+                                <div class="comment-header-tiktok">
+                                    <strong class="comment-author" th:text="${comment.user.fullName}">Người dùng</strong>
+                                    <span class="comment-date-tiktok" 
+                                          th:text="${#temporals.format(comment.createdAt, 'dd/MM/yyyy')}">
+                                        01/01/2024
+                                    </span>
+                                </div>
+                                <div class="comment-content-tiktok" th:text="${comment.content}">Nội dung bình luận</div>
+                                
+                                <!-- Reply Button -->
+                                <div sec:authorize="isAuthenticated()" class="comment-actions">
+                                    <button type="button" class="btn-reply" th:onclick="'toggleReplyForm(' + ${comment.commentId} + ')'">
+                                        <i class="fas fa-reply"></i> Trả lời
+                                    </button>
+                                </div>
+                                
+                                <!-- Reply Form (Hidden by default) -->
+                                <div sec:authorize="isAuthenticated()" class="reply-form-container" th:id="'replyForm-' + ${comment.commentId}" style="display: none;">
+                                    <form th:action="@{/comments/add}" method="post" class="reply-form">
+                                        <input type="hidden" name="documentId" th:value="${document.documentId}">
+                                        <input type="hidden" name="parentCommentId" th:value="${comment.commentId}">
+                                        <textarea name="content" class="reply-input-tiktok" 
+                                                  placeholder="Viết phản hồi..." required></textarea>
+                                        <div class="reply-form-actions">
+                                            <button type="button" class="btn-cancel-reply" th:onclick="'toggleReplyForm(' + ${comment.commentId} + ')'">
+                                                Hủy
+                                            </button>
+                                            <button type="submit" class="btn-submit-reply">
+                                                Đăng
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                                
+                                <!-- Replies List -->
+                                <div class="replies-list" th:if="${repliesMap != null and repliesMap.containsKey(comment.commentId) and !repliesMap.get(comment.commentId).isEmpty()}">
+                                    <div th:each="reply : ${repliesMap.get(comment.commentId)}" class="reply-tiktok">
+                                        <div class="reply-header-tiktok">
+                                            <strong class="reply-author" th:text="${reply.user.fullName}">Người dùng</strong>
+                                            <span class="reply-date-tiktok" 
+                                                  th:text="${#temporals.format(reply.createdAt, 'dd/MM/yyyy')}">
+                                                01/01/2024
+                                            </span>
+                                        </div>
+                                        <div class="reply-content-tiktok" th:text="${reply.content}">Nội dung phản hồi</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </main>
     
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2024 StudyDocs. All rights reserved.</p>
-        </div>
-    </footer>
-    
+    <script th:src="@{/js/main.js}"></script>
     <script th:inline="javascript">
+        function toggleDropdown() {
+            var dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('show');
+        }
+        
+        function toggleReplyForm(commentId) {
+            var replyForm = document.getElementById('replyForm-' + commentId);
+            if (replyForm) {
+                if (replyForm.style.display === 'none') {
+                    replyForm.style.display = 'block';
+                } else {
+                    replyForm.style.display = 'none';
+                }
+            }
+        }
+        
+        // Close dropdown when clicking outside
+        window.onclick = function(event) {
+            if (!event.target.matches('.header-user-btn') && !event.target.matches('.header-user-btn *')) {
+                var dropdowns = document.getElementsByClassName('dropdown-menu');
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+        
         document.addEventListener('DOMContentLoaded', function() {
-            const stars = document.querySelectorAll('#ratingStars i');
+            // Handle iframe load error
+            const iframe = document.getElementById('documentPreviewIframe');
+            if (iframe) {
+                iframe.addEventListener('error', function() {
+                    const loading = document.getElementById('previewLoading');
+                    if (loading) {
+                        loading.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #f39c12;"></i><h3>Không thể tải xem trước</h3><p>Vui lòng tải xuống để xem tài liệu.</p><a th:href="@{/documents/download/{id}(id=${document.documentId})}" class="btn btn-primary btn-large"><i class="fas fa-download"></i> Tải xuống</a>';
+                    }
+                });
+                
+                // Hide loading after timeout (fallback)
+                setTimeout(function() {
+                    const loading = document.getElementById('previewLoading');
+                    if (loading && loading.style.display !== 'none') {
+                        loading.style.display = 'none';
+                    }
+                }, 5000);
+            }
+            
+            // Display average rating stars
+            const averageRating = /*[[${document.averageRating != null ? document.averageRating : 0.0}]]*/ 0.0;
+            const ratingCount = /*[[${document.ratingCount != null ? document.ratingCount : 0}]]*/ 0;
+            const averageStarsDisplay = document.getElementById('averageStarsDisplay');
+            if (averageStarsDisplay) {
+                let starsHtml = '';
+                
+                if (averageRating > 0) {
+                    const fullStars = Math.floor(averageRating);
+                    const hasHalfStar = averageRating % 1 >= 0.5;
+                    
+                    // Full stars
+                    for (let i = 0; i < fullStars; i++) {
+                        starsHtml += '<i class="fas fa-star text-warning"></i>';
+                    }
+                    
+                    // Half star (if needed)
+                    if (hasHalfStar && fullStars < 5) {
+                        starsHtml += '<i class="fas fa-star-half-alt text-warning"></i>';
+                    }
+                    
+                    // Empty stars
+                    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+                    for (let i = 0; i < emptyStars; i++) {
+                        starsHtml += '<i class="far fa-star text-warning"></i>';
+                    }
+                } else {
+                    // Show all empty stars if no rating
+                    for (let i = 0; i < 5; i++) {
+                        starsHtml += '<i class="far fa-star text-warning"></i>';
+                    }
+                }
+                
+                averageStarsDisplay.innerHTML = starsHtml;
+            }
+            
+            const starsContainer = document.getElementById('ratingStars');
+            if (!starsContainer) {
+                console.log('Rating stars container not found');
+                return;
+            }
+            
+            const stars = starsContainer.querySelectorAll('i');
+            if (stars.length === 0) {
+                console.log('No rating stars found');
+                return;
+            }
+            
             const documentId = /*[[${document.documentId}]]*/ 0;
+            let currentUserRating = /*[[${userRating != null ? userRating : 0}]]*/ 0;
+            
+            // Pre-fill stars if user has already rated
+            if (currentUserRating > 0) {
+                stars.forEach((s, i) => {
+                    if (i < currentUserRating) {
+                        s.classList.remove('far');
+                        s.classList.add('fas');
+                        s.style.color = '#f39c12';
+                    }
+                });
+            }
+            
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
             
             stars.forEach(star => {
                 star.addEventListener('click', function() {
                     const rating = this.getAttribute('data-rating');
                     
+                    const headers = {};
+                    headers[csrfHeader] = csrfToken;
+                    
+                    // Immediately update the clicked stars for visual feedback
+                    const clickedRating = parseInt(rating);
+                    stars.forEach((s, i) => {
+                        if (i < clickedRating) {
+                            s.classList.remove('far');
+                            s.classList.add('fas');
+                            s.style.color = '#f39c12';
+                        } else {
+                            s.classList.remove('fas');
+                            s.classList.add('far');
+                            s.style.color = '#ddd';
+                        }
+                    });
+                    
                     fetch(`/documents/rate/${documentId}?rating=${rating}`, {
-                        method: 'POST'
+                        method: 'POST',
+                        headers: headers
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
                     .then(data => {
-                        document.querySelector('.rating-value').textContent = data.averageRating.toFixed(1);
-                        document.querySelector('.rating-count').textContent = `(${data.ratingCount} đánh giá)`;
+                        const ratingValueEl = document.querySelector('.rating-value-tiktok');
+                        const ratingCountEl = document.querySelector('.rating-count-tiktok');
+                        if (ratingValueEl && data.averageRating !== undefined) {
+                            ratingValueEl.textContent = data.averageRating.toFixed(1);
+                        }
+                        if (ratingCountEl && data.ratingCount !== undefined) {
+                            ratingCountEl.textContent = `(${data.ratingCount})`;
+                        }
                         
+                        // Update average stars display
+                        const averageStarsDisplay = document.getElementById('averageStarsDisplay');
+                        if (averageStarsDisplay) {
+                            let starsHtml = '';
+                            
+                            if (data.averageRating > 0) {
+                                const fullStars = Math.floor(data.averageRating);
+                                const hasHalfStar = data.averageRating % 1 >= 0.5;
+                                
+                                for (let i = 0; i < fullStars; i++) {
+                                    starsHtml += '<i class="fas fa-star text-warning"></i>';
+                                }
+                                
+                                if (hasHalfStar && fullStars < 5) {
+                                    starsHtml += '<i class="fas fa-star-half-alt text-warning"></i>';
+                                }
+                                
+                                const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+                                for (let i = 0; i < emptyStars; i++) {
+                                    starsHtml += '<i class="far fa-star text-warning"></i>';
+                                }
+                            } else {
+                                // Show all empty stars if no rating
+                                for (let i = 0; i < 5; i++) {
+                                    starsHtml += '<i class="far fa-star text-warning"></i>';
+                                }
+                            }
+                            
+                            averageStarsDisplay.innerHTML = starsHtml;
+                        }
+                        
+                        // Update rating display section visibility
+                        const ratingDisplay = document.querySelector('.rating-display-tiktok');
+                        if (ratingDisplay && data.ratingCount > 0) {
+                            ratingDisplay.style.display = 'block';
+                        }
+                        
+                        // Update current user rating
+                        currentUserRating = clickedRating;
+                    })
+                    .catch(error => {
+                        console.error('Error rating document:', error);
+                        alert('Có lỗi xảy ra khi đánh giá. Vui lòng thử lại!');
+                        // Revert stars on error
                         stars.forEach((s, i) => {
-                            if (i < rating) {
+                            if (i < currentUserRating) {
                                 s.classList.remove('far');
                                 s.classList.add('fas');
+                                s.style.color = '#f39c12';
                             } else {
                                 s.classList.remove('fas');
                                 s.classList.add('far');
+                                s.style.color = '#ddd';
                             }
                         });
                     });
                 });
+                
+                // Hover effect
+                star.addEventListener('mouseenter', function() {
+                    const rating = parseInt(this.getAttribute('data-rating'));
+                    stars.forEach((s, i) => {
+                        if (i < rating) {
+                            s.style.color = '#f39c12';
+                        } else {
+                            s.style.color = '#ddd';
+                        }
+                    });
+                });
             });
+            
+            // Reset stars on mouse leave
+            if (starsContainer) {
+                starsContainer.addEventListener('mouseleave', function() {
+                    stars.forEach((s, i) => {
+                        if (i < currentUserRating) {
+                            s.classList.remove('far');
+                            s.classList.add('fas');
+                            s.style.color = '#f39c12';
+                        } else {
+                            s.classList.remove('fas');
+                            s.classList.add('far');
+                            s.style.color = '#ddd';
+                        }
+                    });
+                });
+            }
         });
     </script>
 </body>
 </html>
-

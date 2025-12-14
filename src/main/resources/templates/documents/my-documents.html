@@ -24,18 +24,6 @@
             </a>
         </div>
         
-        <!-- Guest User Section -->
-        <div class="sidebar-guest" sec:authorize="!isAuthenticated()">
-            <div class="guest-avatar">
-                <i class="fas fa-user-circle"></i>
-            </div>
-            <p class="guest-text">Đăng nhập để trải nghiệm đầy đủ</p>
-            <a th:href="@{/login}" class="btn-login">
-                <i class="fas fa-sign-in-alt"></i> Đăng nhập
-            </a>
-            <a th:href="@{/register}" class="btn-register">Đăng ký</a>
-        </div>
-        
         <!-- Navigation Menu -->
         <nav class="sidebar-nav">
             <a th:href="@{/home}" class="sidebar-link">
@@ -54,20 +42,12 @@
                 <i class="fas fa-search"></i>
                 <span>Tìm kiếm</span>
             </a>
-            <a href="#" class="sidebar-link" sec:authorize="isAuthenticated()">
-                <i class="fas fa-chart-line"></i>
-                <span>Thống kê</span>
-            </a>
             
             <div class="sidebar-divider"></div>
             
-            <a href="#" class="sidebar-link">
-                <i class="fas fa-clock"></i>
-                <span>Gần đây</span>
-            </a>
-            <a href="#" class="sidebar-link">
-                <i class="fas fa-book"></i>
-                <span>Môn học</span>
+            <a th:href="@{/majors}" class="sidebar-link">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Tài liệu theo ngành học</span>
             </a>
             
             <div sec:authorize="hasRole('ADMIN')">
@@ -101,14 +81,29 @@
             </div>
             
             <div class="header-actions" sec:authorize="isAuthenticated()">
+                <!-- Notification Bell -->
+                <div class="notification-wrapper">
+                    <button class="notification-btn" onclick="toggleNotifications()">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h4>Thông báo</h4>
+                        </div>
+                        <div class="notification-list" id="notificationList">
+                            <div class="notification-empty">Không có thông báo</div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="header-user-dropdown">
                     <button class="header-user-btn" onclick="toggleDropdown()">
                         <i class="fas fa-user-circle"></i>
-                        <span sec:authentication="principal.user.fullName">minh</span>
+                        <span sec:authentication="principal.user.fullName">User</span>
                         <i class="fas fa-chevron-down"></i>
                     </button>
                     <div class="dropdown-menu" id="userDropdown">
-                        <a href="#" class="dropdown-item">
+                        <a th:href="@{/profile}" class="dropdown-item">
                             <i class="fas fa-user"></i>
                             Thông tin cá nhân
                         </a>
@@ -122,86 +117,201 @@
                     </div>
                 </div>
             </div>
-            
-            <div class="header-actions" sec:authorize="!isAuthenticated()">
-                <a th:href="@{/login}" class="header-btn">
-                    <i class="fas fa-sign-in-alt"></i>
-                    Đăng nhập
-                </a>
-            </div>
         </header>
-    
+        
         <!-- Content Area -->
         <div class="content-area">
-    <section class="my-documents-section">
-            <div class="section-header">
-                <h1>Tài liệu của tôi</h1>
-                <a th:href="@{/documents/upload}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Tải lên tài liệu mới
-                </a>
-            </div>
-            
-            <div class="documents-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Tên tài liệu</th>
-                            <th>Môn học</th>
-                            <th>Loại</th>
-                            <th>Trạng thái</th>
-                            <th>Lượt xem</th>
-                            <th>Lượt tải</th>
-                            <th>Ngày đăng</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="doc : ${documents.content}">
-                            <td><strong th:text="${doc.documentName}">Tên tài liệu</strong></td>
-                            <td th:text="${doc.subject.subjectName}">Môn học</td>
-                            <td th:text="${doc.type.typeName}">Loại</td>
-                            <td>
-                                <span class="badge" 
-                                      th:classappend="${doc.status.name() == 'APPROVED' ? 'badge-success' : 
-                                                       doc.status.name() == 'PENDING' ? 'badge-warning' : 
-                                                       doc.status.name() == 'REJECTED' ? 'badge-danger' : ''}"
-                                      th:text="${doc.status}">
-                                </span>
-                            </td>
-                            <td th:text="${doc.viewCount}">0</td>
-                            <td th:text="${doc.downloadCount}">0</td>
-                            <td th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy')}">01/01/2024</td>
-                            <td>
-                                <a th:href="@{/documents/view/{id}(id=${doc.documentId})}" 
-                                   class="btn btn-sm btn-info" title="Xem">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Pagination -->
-            <div th:if="${documents.totalPages > 1}" class="pagination">
-                <a th:if="${currentPage > 0}" 
-                   th:href="@{/documents/my-documents(page=${currentPage-1})}" 
-                   class="btn btn-outline">
-                    <i class="fas fa-chevron-left"></i> Trước
-                </a>
+            <section class="my-docs-drive" id="myDocsDrive">
+                <div class="drive-header">
+                    <h1 class="page-title">Tài liệu của tôi</h1>
+                </div>
                 
-                <span class="page-info">
-                    Trang <strong th:text="${currentPage + 1}">1</strong> / <strong th:text="${totalPages}">1</strong>
-                </span>
+                <div th:if="${successMessage}" class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+                </div>
                 
-                <a th:if="${currentPage < totalPages - 1}" 
-                   th:href="@{/documents/my-documents(page=${currentPage+1})}" 
-                   class="btn btn-outline">
-                    Sau <i class="fas fa-chevron-right"></i>
-                </a>
-            </section>
+                <div th:if="${errorMessage}" class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+                </div>
+                
+                <!-- Suggested Folders -->
+                <div th:if="${folders != null && !folders.empty}" class="drive-section">
+                    <h2 class="section-subtitle">Thư mục của bạn</h2>
+                    <div class="drive-grid">
+                        <div th:each="folder : ${folders}" class="drive-item folder-item">
+                            <a th:href="@{/documents/my-documents(folderId=${folder.folderId})}" class="folder-link">
+                                <div class="item-icon folder-icon">
+                                    <i class="fas fa-folder"></i>
+                                </div>
+                                <div class="item-info">
+                                    <h3 class="item-name" th:text="${folder.folderName}">Folder Name</h3>
+                                </div>
+                            </a>
+                            <div class="item-actions">
+                                <button class="item-menu-btn" th:data-folder-id="${folder.folderId}" onclick="toggleFolderMenu(this.dataset.folderId)">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <div class="item-menu" th:id="'folderMenu' + ${folder.folderId}">
+                                    <a th:href="@{/documents/upload(folderId=${folder.folderId})}" class="menu-item">
+                                        <i class="fas fa-upload"></i> Tải lên vào folder
+                                    </a>
+                                    <button class="menu-item rename-folder-btn" th:data-folder-id="${folder.folderId}" th:data-folder-name="${folder.folderName}" onclick="showRenameFolderModal(this.dataset.folderId, this.dataset.folderName)">
+                                        <i class="fas fa-edit"></i> Đổi tên
+                                    </button>
+                                    <form th:action="@{/documents/folders/delete/{id}(id=${folder.folderId})}" 
+                                          method="post" 
+                                          onsubmit="return confirm('Bạn có chắc muốn xóa folder này?');">
+                                        <button type="submit" class="menu-item delete-item">
+                                            <i class="fas fa-trash"></i> Xóa
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Suggested Files (Documents without folder) -->
+                <div class="drive-section">
+                    <h2 class="section-subtitle">
+                        <span th:if="${currentFolderId == null}">Tài liệu của bạn</span>
+                        <span th:if="${currentFolderId != null}">
+                            <a th:href="@{/documents/my-documents}" class="breadcrumb-link">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </a>
+                            Tài liệu trong folder
+                        </span>
+                    </h2>
+                    <div class="drive-grid">
+                        <div th:each="doc : ${documents}" 
+                             class="drive-item file-item document-card">
+                            <a th:href="@{/documents/view/{id}(id=${doc.documentId})}" class="item-link">
+                                <div class="document-preview" 
+                                     th:classappend="${doc.filePath.endsWith('.pdf') ? 'preview-pdf' : 
+                                                      doc.filePath.endsWith('.doc') || doc.filePath.endsWith('.docx') ? 'preview-doc' :
+                                                      doc.filePath.endsWith('.xls') || doc.filePath.endsWith('.xlsx') ? 'preview-xls' :
+                                                      doc.filePath.endsWith('.ppt') || doc.filePath.endsWith('.pptx') ? 'preview-ppt' : ''}">
+                                    <div class="preview-placeholder">
+                                        <i class="fas" 
+                                           th:classappend="${doc.filePath.endsWith('.pdf') ? 'fa-file-pdf' : 
+                                                            doc.filePath.endsWith('.doc') || doc.filePath.endsWith('.docx') ? 'fa-file-word' :
+                                                            doc.filePath.endsWith('.xls') || doc.filePath.endsWith('.xlsx') ? 'fa-file-excel' :
+                                                            doc.filePath.endsWith('.ppt') || doc.filePath.endsWith('.pptx') ? 'fa-file-powerpoint' : 'fa-file'}"></i>
+                                        <span class="preview-label" 
+                                              th:text="${doc.filePath.endsWith('.pdf') ? 'PDF' : 
+                                                        doc.filePath.endsWith('.doc') || doc.filePath.endsWith('.docx') ? 'DOC' :
+                                                        doc.filePath.endsWith('.xls') || doc.filePath.endsWith('.xlsx') ? 'XLS' :
+                                                        doc.filePath.endsWith('.ppt') || doc.filePath.endsWith('.pptx') ? 'PPT' : 'FILE'}">PDF</span>
+                                    </div>
+                                </div>
+                                <div class="item-info">
+                                    <h3 class="item-name" th:text="${doc.documentName}">Document Name</h3>
+                                    <p class="item-meta">
+                                        <span th:if="${doc.subject != null}" th:text="${doc.subject.subjectName}">Subject</span>
+                                        <span th:if="${doc.subject == null}">Tài liệu cá nhân</span>
+                                        <span th:if="${doc.createdAt != null}"> • </span>
+                                        <span th:if="${doc.createdAt != null}" th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy')}">Date</span>
+                                    </p>
+                                </div>
+                            </a>
+                            <div class="item-actions">
+                                <button class="item-menu-btn" th:data-doc-id="${doc.documentId}" onclick="toggleDocMenu(this.dataset.docId)">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <div class="item-menu" th:id="'docMenu' + ${doc.documentId}">
+                                    <a th:href="@{/documents/view/{id}(id=${doc.documentId})}" class="menu-item">
+                                        <i class="fas fa-eye"></i> Xem
+                                    </a>
+                                    <a th:href="@{/documents/download/{id}(id=${doc.documentId})}" class="menu-item">
+                                        <i class="fas fa-download"></i> Tải xuống
+                                    </a>
+                                    <form th:action="@{/documents/delete/{id}(id=${doc.documentId})}" method="post">
+                                        <button type="submit" class="menu-item delete-item">
+                                            <i class="fas fa-trash"></i> Xóa
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+            </div>
+        </div>
+    </section>
         </div>
     </main>
+    
+    <!-- Create Folder Modal -->
+    <div id="createFolderModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Tạo folder mới</h3>
+            <form th:action="@{/documents/folders/create}" method="post">
+                <div class="form-group">
+                    <label for="folderName">Tên folder:</label>
+                    <input type="text" id="folderName" name="folderName" class="form-control" required placeholder="Nhập tên folder">
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">Tạo</button>
+                    <button type="button" class="btn btn-outline" onclick="closeCreateFolderModal()">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Rename Folder Modal -->
+    <div id="renameFolderModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Đổi tên folder</h3>
+            <form id="renameFolderForm" method="post">
+                <div class="form-group">
+                    <label for="newFolderName">Tên mới:</label>
+                    <input type="text" id="newFolderName" name="folderName" class="form-control" required placeholder="Nhập tên mới">
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">Đổi tên</button>
+                    <button type="button" class="btn btn-outline" onclick="closeRenameFolderModal()">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Context Menu -->
+    <div id="contextMenu" class="context-menu" style="display: none;">
+        <div class="context-menu-item" onclick="showCreateFolderModal(); hideContextMenu();">
+            <i class="fas fa-folder-plus"></i>
+            <span>Tạo folder mới</span>
+        </div>
+        <div class="context-menu-item" onclick="showQuickUploadModal(); hideContextMenu();">
+            <i class="fas fa-plus"></i>
+            <span>Tải lên tài liệu mới</span>
+        </div>
+    </div>
+    
+    <!-- Quick Upload Modal -->
+    <div id="quickUploadModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Tải lên tài liệu</h3>
+            <p style="color: #666; margin-bottom: 1rem;">Tài liệu sẽ được lưu vào "Tài liệu của tôi" (chỉ bạn xem được)</p>
+            <form th:action="@{/documents/upload-private}" method="post" enctype="multipart/form-data">
+                <input type="hidden" id="uploadFolderId" name="folderId" th:value="${currentFolderId}">
+                <div class="form-group">
+                    <label for="quickFile">Chọn file:</label>
+                    <input type="file" id="quickFile" name="file" class="form-control" required accept=".pdf,.doc,.docx,.ppt,.pptx">
+                    <small class="form-text">Hỗ trợ: PDF, DOC, DOCX, PPT, PPTX</small>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Tải lên
+                    </button>
+                    <button type="button" class="btn btn-outline" onclick="closeQuickUploadModal()">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var currentFolderId = /*[[${currentFolderId}]]*/ null;
+        /*]]>*/
+    </script>
     
     <script th:src="@{/js/main.js}"></script>
     <script>
@@ -210,7 +320,6 @@
             dropdown.classList.toggle('show');
         }
         
-        // Close dropdown when clicking outside
         window.onclick = function(event) {
             if (!event.target.matches('.header-user-btn') && !event.target.matches('.header-user-btn *')) {
                 var dropdowns = document.getElementsByClassName('dropdown-menu');
@@ -222,7 +331,120 @@
                 }
             }
         }
+        
+        function showCreateFolderModal() {
+            document.getElementById('createFolderModal').style.display = 'flex';
+        }
+        
+        function closeCreateFolderModal() {
+            document.getElementById('createFolderModal').style.display = 'none';
+        }
+        
+        function showRenameFolderModal(folderId, folderName) {
+            const modal = document.getElementById('renameFolderModal');
+            const form = document.getElementById('renameFolderForm');
+            const input = document.getElementById('newFolderName');
+            
+            form.action = '/documents/folders/rename/' + folderId;
+            input.value = folderName;
+            modal.style.display = 'flex';
+        }
+        
+        function closeRenameFolderModal() {
+            document.getElementById('renameFolderModal').style.display = 'none';
+        }
+        
+        function showQuickUploadModal() {
+            const modal = document.getElementById('quickUploadModal');
+            const folderInput = document.getElementById('uploadFolderId');
+            
+            // Set current folder ID if viewing a folder
+            if (currentFolderId) {
+                folderInput.value = currentFolderId;
+            } else {
+                folderInput.value = '';
+            }
+            
+            modal.style.display = 'flex';
+        }
+        
+        function closeQuickUploadModal() {
+            document.getElementById('quickUploadModal').style.display = 'none';
+        }
+        
+        function toggleFolderMenu(folderId) {
+            const menu = document.getElementById('folderMenu' + folderId);
+            // Close all other menus
+            document.querySelectorAll('.item-menu').forEach(m => {
+                if (m !== menu) m.style.display = 'none';
+            });
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        function toggleDocMenu(docId) {
+            const menu = document.getElementById('docMenu' + docId);
+            // Close all other menus
+            document.querySelectorAll('.item-menu').forEach(m => {
+                if (m !== menu) m.style.display = 'none';
+            });
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        // Close menus when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.matches('.item-menu-btn') && !event.target.matches('.item-menu-btn *')) {
+                document.querySelectorAll('.item-menu').forEach(m => {
+                    m.style.display = 'none';
+                });
+            }
+        });
+        
+        // Context Menu functionality
+        const contextMenu = document.getElementById('contextMenu');
+        const contentArea = document.querySelector('.content-area');
+        
+        // Show context menu on right click anywhere in content area
+        contentArea.addEventListener('contextmenu', function(e) {
+            // Check if clicking on interactive elements that should NOT trigger context menu
+            const clickedElement = e.target;
+            
+            // Only prevent context menu if clicking directly on links or their children
+            const isInteractiveElement = 
+                clickedElement.tagName === 'A' ||
+                clickedElement.tagName === 'BUTTON' ||
+                clickedElement.tagName === 'INPUT' ||
+                clickedElement.tagName === 'FORM' ||
+                clickedElement.closest('a:not(.breadcrumb-link)') ||
+                clickedElement.closest('button.item-menu-btn') ||
+                clickedElement.closest('.item-menu');
+            
+            // Show context menu if NOT clicking on interactive elements
+            if (!isInteractiveElement) {
+                e.preventDefault();
+                
+                // Position the menu at mouse location
+                contextMenu.style.display = 'block';
+                contextMenu.style.left = e.pageX + 'px';
+                contextMenu.style.top = e.pageY + 'px';
+            }
+        });
+        
+        // Hide context menu on click anywhere
+        document.addEventListener('click', function(e) {
+            if (!contextMenu.contains(e.target)) {
+                contextMenu.style.display = 'none';
+            }
+        });
+        
+        // Hide context menu on scroll
+        document.addEventListener('scroll', function() {
+            contextMenu.style.display = 'none';
+        });
+        
+        function hideContextMenu() {
+            contextMenu.style.display = 'none';
+        }
+        
     </script>
 </body>
 </html>
-

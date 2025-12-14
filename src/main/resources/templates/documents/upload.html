@@ -24,18 +24,6 @@
             </a>
         </div>
         
-        <!-- Guest User Section -->
-        <div class="sidebar-guest" sec:authorize="!isAuthenticated()">
-            <div class="guest-avatar">
-                <i class="fas fa-user-circle"></i>
-            </div>
-            <p class="guest-text">Đăng nhập để trải nghiệm đầy đủ</p>
-            <a th:href="@{/login}" class="btn-login">
-                <i class="fas fa-sign-in-alt"></i> Đăng nhập
-            </a>
-            <a th:href="@{/register}" class="btn-register">Đăng ký</a>
-        </div>
-        
         <!-- Navigation Menu -->
         <nav class="sidebar-nav">
             <a th:href="@{/home}" class="sidebar-link">
@@ -54,20 +42,12 @@
                 <i class="fas fa-search"></i>
                 <span>Tìm kiếm</span>
             </a>
-            <a href="#" class="sidebar-link" sec:authorize="isAuthenticated()">
-                <i class="fas fa-chart-line"></i>
-                <span>Thống kê</span>
-            </a>
             
             <div class="sidebar-divider"></div>
             
-            <a href="#" class="sidebar-link">
-                <i class="fas fa-clock"></i>
-                <span>Gần đây</span>
-            </a>
-            <a href="#" class="sidebar-link">
-                <i class="fas fa-book"></i>
-                <span>Môn học</span>
+            <a th:href="@{/majors}" class="sidebar-link">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Tài liệu theo ngành học</span>
             </a>
             
             <div sec:authorize="hasRole('ADMIN')">
@@ -101,14 +81,29 @@
             </div>
             
             <div class="header-actions" sec:authorize="isAuthenticated()">
+                <!-- Notification Bell -->
+                <div class="notification-wrapper">
+                    <button class="notification-btn" onclick="toggleNotifications()">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h4>Thông báo</h4>
+                        </div>
+                        <div class="notification-list" id="notificationList">
+                            <div class="notification-empty">Không có thông báo</div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="header-user-dropdown">
                     <button class="header-user-btn" onclick="toggleDropdown()">
                         <i class="fas fa-user-circle"></i>
-                        <span sec:authentication="principal.user.fullName">minh</span>
+                        <span sec:authentication="principal.user.fullName">User</span>
                         <i class="fas fa-chevron-down"></i>
                     </button>
                     <div class="dropdown-menu" id="userDropdown">
-                        <a href="#" class="dropdown-item">
+                        <a th:href="@{/profile}" class="dropdown-item">
                             <i class="fas fa-user"></i>
                             Thông tin cá nhân
                         </a>
@@ -122,20 +117,15 @@
                     </div>
                 </div>
             </div>
-            
-            <div class="header-actions" sec:authorize="!isAuthenticated()">
-                <a th:href="@{/login}" class="header-btn">
-                    <i class="fas fa-sign-in-alt"></i>
-                    Đăng nhập
-                </a>
-            </div>
         </header>
         
         <!-- Content Area -->
         <div class="content-area">
-            <section class="upload-section">
-            <div class="upload-container">
-                <h1 class="page-title">Tải lên tài liệu</h1>
+            <section class="admin-users-section">
+                <h1 class="page-title">Tải lên tài liệu công khai</h1>
+                <p style="color: #666; margin-bottom: 1.5rem; font-size: 0.95rem;">
+                    Tài liệu sẽ được chia sẻ với mọi người sau khi được admin duyệt
+                </p>
                 
                 <div th:if="${errorMessage}" class="alert alert-danger">
                     <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
@@ -145,28 +135,28 @@
                     <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
                 </div>
                 
-                <form th:action="@{/documents/upload}" method="post" enctype="multipart/form-data" class="upload-form">
-                    <div class="form-group">
-                        <label for="documentName">
-                            <i class="fas fa-file-alt"></i> Tên tài liệu <span class="required">*</span>
-                        </label>
-                        <input type="text" id="documentName" name="documentName" class="form-control" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="description">
-                            <i class="fas fa-align-left"></i> Mô tả
-                        </label>
-                        <textarea id="description" name="description" class="form-control" rows="4"></textarea>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="majorId">
-                                <i class="fas fa-graduation-cap"></i> Chuyên ngành <span class="required">*</span>
+                <div class="documents-table" style="padding: 2rem; background-color: var(--white-color); border-radius: 8px; box-shadow: var(--shadow);">
+                    <form th:action="@{/documents/upload}" method="post" enctype="multipart/form-data" id="uploadForm" style="max-width: 600px; margin: 0 auto;">
+                        
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label for="file" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark-color);">
+                                <i class="fas fa-paperclip"></i> Chọn file <span class="required">*</span>
                             </label>
-                            <select id="majorId" class="form-control" onchange="loadSubjects(this.value)" required>
-                                <option value="">-- Chọn chuyên ngành --</option>
+                            <input type="file" id="file" name="file" class="form-control" required 
+                                   accept=".pdf,.doc,.docx,.ppt,.pptx" 
+                                   style="padding: 0.75rem; border: 2px dashed #ddd; border-radius: 8px; width: 100%;">
+                            <small class="form-text" style="display: block; margin-top: 0.5rem; color: #666;">
+                                Hỗ trợ: PDF, DOC, DOCX, PPT, PPTX (Tối đa 50MB)
+                            </small>
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label for="majorId" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark-color);">
+                                <i class="fas fa-graduation-cap"></i> Ngành học
+                            </label>
+                            <select id="majorId" name="majorId" class="form-control" 
+                                    style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; width: 100%;">
+                                <option value="">-- Chọn ngành học --</option>
                                 <option th:each="major : ${majors}" 
                                         th:value="${major.majorId}" 
                                         th:text="${major.majorName}">
@@ -174,69 +164,53 @@
                             </select>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="subjectId">
-                                <i class="fas fa-book"></i> Môn học <span class="required">*</span>
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label for="typeId" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark-color);">
+                                <i class="fas fa-tags"></i> Loại tài liệu
                             </label>
-                            <select id="subjectId" name="subjectId" class="form-control" required>
-                                <option value="">-- Chọn môn học --</option>
+                            <select id="typeId" name="typeId" class="form-control" 
+                                    style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; width: 100%;">
+                                <option value="">-- Chọn loại tài liệu --</option>
+                                <option th:each="type : ${documentTypes}" 
+                                        th:value="${type.typeId}" 
+                                        th:text="${type.typeName}">
+                                </option>
                             </select>
                         </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="typeId">
-                            <i class="fas fa-tags"></i> Loại tài liệu <span class="required">*</span>
-                        </label>
-                        <select id="typeId" name="typeId" class="form-control" required>
-                            <option value="">-- Chọn loại tài liệu --</option>
-                            <option th:each="type : ${documentTypes}" 
-                                    th:value="${type.typeId}" 
-                                    th:text="${type.typeName}">
-                            </option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="tags">
-                            <i class="fas fa-tag"></i> Tags (phân cách bởi dấu phẩy)
-                        </label>
-                        <input type="text" id="tags" name="tags" class="form-control" 
-                               placeholder="VD: lý thuyết, bài tập, ôn thi">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="file">
-                            <i class="fas fa-paperclip"></i> Chọn file <span class="required">*</span>
-                        </label>
-                        <div class="file-input-wrapper">
-                            <input type="file" id="file" name="file" class="form-control" required>
-                            <small class="form-text">Hỗ trợ: PDF, DOC, DOCX, PPT, PPTX (Tối đa 50MB)</small>
+                        
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label for="courseCode" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark-color);">
+                                <i class="fas fa-code"></i> Mã học phần
+                            </label>
+                            <input type="text" id="courseCode" name="courseCode" class="form-control" 
+                                   placeholder="VD: IT3180" 
+                                   style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; width: 100%;">
+                            <small class="form-text" style="display: block; margin-top: 0.5rem; color: #666;">
+                                Nhập mã học phần của môn học (ví dụ: IT3180, CS101)
+                            </small>
                         </div>
-                    </div>
-                    
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary btn-large">
-                            <i class="fas fa-upload"></i> Tải lên
-                        </button>
-                        <a th:href="@{/home}" class="btn btn-outline btn-large">
-                            <i class="fas fa-times"></i> Hủy
-                        </a>
-                    </div>
-                </form>
-            </div>
+                        
+                        <div class="form-actions" style="display: flex; gap: 1rem; margin-top: 2rem;">
+                            <button type="submit" class="btn btn-primary" style="flex: 1;">
+                                <i class="fas fa-cloud-upload-alt"></i> Tải lên và chờ duyệt
+                            </button>
+                            <a th:href="@{/home}" class="btn btn-outline" style="flex: 1; text-align: center;">
+                                <i class="fas fa-times"></i> Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </section>
         </div>
     </main>
     
     <script th:src="@{/js/main.js}"></script>
-    <script>
+    <script th:inline="javascript">
         function toggleDropdown() {
             var dropdown = document.getElementById('userDropdown');
             dropdown.classList.toggle('show');
         }
         
-        // Close dropdown when clicking outside
         window.onclick = function(event) {
             if (!event.target.matches('.header-user-btn') && !event.target.matches('.header-user-btn *')) {
                 var dropdowns = document.getElementsByClassName('dropdown-menu');
@@ -249,20 +223,16 @@
             }
         }
         
-        function loadSubjects(majorId) {
-            if (majorId) {
-                fetch('/api/subjects/by-major/' + majorId)
-                    .then(response => response.json())
-                    .then(subjects => {
-                        const subjectSelect = document.getElementById('subjectId');
-                        subjectSelect.innerHTML = '<option value="">-- Chọn môn học --</option>';
-                        subjects.forEach(subject => {
-                            subjectSelect.innerHTML += `<option value="${subject.subjectId}">${subject.subjectName}</option>`;
-                        });
-                    });
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            var majorId = document.getElementById('majorId').value;
+            var typeId = document.getElementById('typeId').value;
+            
+            if (!majorId && !typeId) {
+                e.preventDefault();
+                alert('Vui lòng chọn ít nhất một trong: Ngành học hoặc Loại tài liệu!');
+                return false;
             }
-        }
+        });
     </script>
 </body>
 </html>
-

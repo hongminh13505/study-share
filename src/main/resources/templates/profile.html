@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý người dùng - StudyShare</title>
+    <title>Thông tin cá nhân - StudyShare</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -56,7 +56,7 @@
                     <i class="fas fa-clipboard-check"></i>
                     <span>Quản lý tài liệu</span>
                 </a>
-                <a th:href="@{/admin/users}" class="sidebar-link active">
+                <a th:href="@{/admin/users}" class="sidebar-link">
                     <i class="fas fa-users-cog"></i>
                     <span>Quản lý người dùng</span>
                 </a>
@@ -121,9 +121,12 @@
         
         <!-- Content Area -->
         <div class="content-area">
-            <section class="admin-users-section">
-                <h1 class="page-title">Quản lý người dùng</h1>
+            <section class="my-docs-drive">
+                <div class="drive-header">
+                    <h1 class="page-title">Thông tin cá nhân</h1>
+                </div>
                 
+                <!-- Success/Error Messages -->
                 <div th:if="${successMessage}" class="alert alert-success">
                     <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
                 </div>
@@ -132,88 +135,78 @@
                     <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
                 </div>
                 
-                <div class="documents-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Username</th>
-                                <th>Email</th>
-                                <th>Họ tên</th>
-                                <th style="text-align: center;">Vai trò</th>
-                                <th style="text-align: center;">Trạng thái</th>
-                                <th>Ngày tạo</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="user : ${users}">
-                                <td th:text="${user.userId}">1</td>
-                                <td><strong th:text="${user.username}">username</strong></td>
-                                <td th:text="${user.email}">email@example.com</td>
-                                <td th:text="${user.fullName}">Họ tên</td>
-                                <td style="text-align: center;">
-                                    <span class="badge" 
-                                          th:classappend="${user.role.name() == 'ADMIN' ? 'badge-danger' : 'badge-info'}"
-                                          th:text="${user.role}">
-                                    </span>
-                                </td>
-                                <td style="text-align: center;">
-                                    <span class="badge" 
-                                          th:classappend="${user.status.name() == 'ACTIVE' ? 'badge-success' : 'badge-danger'}"
-                                          th:text="${user.status}">
-                                    </span>
-                                </td>
-                                <td th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy')}">01/01/2024</td>
-                                <td>
-                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                        <!-- Lock/Unlock buttons - cho cả Admin -->
-                                        <div>
-                                            <form th:if="${user.status.name() == 'ACTIVE'}" 
-                                                  th:action="@{/admin/users/lock/{id}(id=${user.userId})}" 
-                                                  method="post" style="display: inline;"
-                                                  onsubmit="return confirm('Bạn có chắc muốn khóa tài khoản này?');">
-                                                <button type="submit" class="btn btn-sm btn-warning" title="Khóa">
-                                                    <i class="fas fa-lock"></i>
-                                                </button>
-                                            </form>
-                                            
-                                            <form th:if="${user.status.name() == 'LOCKED'}" 
-                                                  th:action="@{/admin/users/unlock/{id}(id=${user.userId})}" 
-                                                  method="post" style="display: inline;">
-                                                <button type="submit" class="btn btn-sm btn-success" title="Mở khóa">
-                                                    <i class="fas fa-unlock"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                        
-                                        <!-- Promote/Demote buttons -->
-                                        <div>
-                                            <form th:if="${user.role.name() == 'USER'}" 
-                                                  th:action="@{/admin/users/promote/{id}(id=${user.userId})}" 
-                                                  method="post" 
-                                                  style="display: inline;"
-                                                  onsubmit="return confirm('Bạn có chắc muốn nâng cấp user này lên Admin?');">
-                                                <button type="submit" class="btn btn-sm btn-info" title="Nâng cấp lên Admin">
-                                                    <i class="fas fa-arrow-up"></i> Admin
-                                                </button>
-                                            </form>
-                                            
-                                            <form th:if="${user.role.name() == 'ADMIN'}" 
-                                                  th:action="@{/admin/users/demote/{id}(id=${user.userId})}" 
-                                                  method="post" 
-                                                  style="display: inline;"
-                                                  onsubmit="return confirm('Bạn có chắc muốn hạ xuống User?');">
-                                                <button type="submit" class="btn btn-sm btn-danger" title="Hạ xuống User">
-                                                    <i class="fas fa-arrow-down"></i> User
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="profile-layout">
+                    <!-- Profile Information Section - Left -->
+                    <div class="profile-section profile-left">
+                        <h2 class="section-title">
+                            <i class="fas fa-user"></i> Thông tin cá nhân
+                        </h2>
+                        
+                        <form th:action="@{/profile/update}" method="post" class="profile-form">
+                            <div class="form-group">
+                                <label for="username">Tên đăng nhập:</label>
+                                <input type="text" id="username" th:value="${user.username}" class="form-control" disabled>
+                                <small class="form-text">Tên đăng nhập không thể thay đổi</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="fullName">Họ và tên: <span class="required">*</span></label>
+                                <input type="text" id="fullName" name="fullName" th:value="${user.fullName}" class="form-control" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email">Email: <span class="required">*</span></label>
+                                <input type="email" id="email" name="email" th:value="${user.email}" class="form-control" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Vai trò:</label>
+                                <input type="text" th:value="${user.role == 'ADMIN' ? 'Quản trị viên' : 'Người dùng'}" class="form-control" disabled>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Ngày tạo tài khoản:</label>
+                                <input type="text" th:value="${#temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm')}" class="form-control" disabled>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Lưu thay đổi
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Change Password Section - Right -->
+                    <div class="profile-section profile-right">
+                        <h2 class="section-title">
+                            <i class="fas fa-lock"></i> Đổi mật khẩu
+                        </h2>
+                        
+                        <form th:action="@{/profile/change-password}" method="post" class="profile-form">
+                            <div class="form-group">
+                                <label for="currentPassword">Mật khẩu hiện tại: <span class="required">*</span></label>
+                                <input type="password" id="currentPassword" name="currentPassword" class="form-control" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="newPassword">Mật khẩu mới: <span class="required">*</span></label>
+                                <input type="password" id="newPassword" name="newPassword" class="form-control" required minlength="6">
+                                <small class="form-text">Mật khẩu phải có ít nhất 6 ký tự</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="confirmPassword">Xác nhận mật khẩu mới: <span class="required">*</span></label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required minlength="6">
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-key"></i> Đổi mật khẩu
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </section>
         </div>
@@ -238,6 +231,19 @@
                 }
             }
         }
+        
+        // Password confirmation validation
+        document.getElementById('confirmPassword').addEventListener('input', function() {
+            var newPassword = document.getElementById('newPassword').value;
+            var confirmPassword = this.value;
+            
+            if (newPassword !== confirmPassword) {
+                this.setCustomValidity('Mật khẩu xác nhận không khớp!');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
     </script>
 </body>
 </html>
+

@@ -54,20 +54,12 @@
                 <i class="fas fa-search"></i>
                 <span>Tìm kiếm</span>
             </a>
-            <a href="#" class="sidebar-link" sec:authorize="isAuthenticated()">
-                <i class="fas fa-chart-line"></i>
-                <span>Thống kê</span>
-            </a>
             
             <div class="sidebar-divider"></div>
             
-            <a href="#" class="sidebar-link">
-                <i class="fas fa-clock"></i>
-                <span>Gần đây</span>
-            </a>
-            <a href="#" class="sidebar-link">
-                <i class="fas fa-book"></i>
-                <span>Môn học</span>
+            <a th:href="@{/majors}" class="sidebar-link">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Tài liệu theo ngành học</span>
             </a>
             
             <div sec:authorize="hasRole('ADMIN')">
@@ -101,6 +93,21 @@
             </div>
             
             <div class="header-actions" sec:authorize="isAuthenticated()">
+                <!-- Notification Bell -->
+                <div class="notification-wrapper">
+                    <button class="notification-btn" onclick="toggleNotifications()">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h4>Thông báo</h4>
+                        </div>
+                        <div class="notification-list" id="notificationList">
+                            <div class="notification-empty">Không có thông báo</div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="header-user-dropdown">
                     <button class="header-user-btn" onclick="toggleDropdown()">
                         <i class="fas fa-user-circle"></i>
@@ -108,7 +115,7 @@
                         <i class="fas fa-chevron-down"></i>
                     </button>
                     <div class="dropdown-menu" id="userDropdown">
-                        <a href="#" class="dropdown-item">
+                        <a th:href="@{/profile}" class="dropdown-item">
                             <i class="fas fa-user"></i>
                             Thông tin cá nhân
                         </a>
@@ -138,7 +145,9 @@
                 <h1 class="page-title">Tìm kiếm tài liệu</h1>
                 
                 <div class="search-filters">
-                    <form th:action="@{/documents/search}" method="get" class="search-form-filter">
+                    <form th:action="@{/documents/search}" method="get" class="search-form-filter" id="searchForm">
+                        <input type="hidden" name="majorId" th:value="${selectedMajorId}">
+                        <input type="hidden" name="sortBy" th:value="${selectedSortBy}">
                         <input type="text" name="keyword" th:value="${keyword}" 
                                placeholder="Tìm kiếm tài liệu..." class="search-input-filter">
                         <button type="submit" class="btn btn-primary">
@@ -148,23 +157,24 @@
                 </div>
                 
                 <div class="filters">
-                    <select name="majorId" id="majorFilter" class="form-control" onchange="loadSubjects(this.value)">
-                        <option value="">Tất cả chuyên ngành</option>
-                        <option th:each="major : ${majors}" 
-                                th:value="${major.majorId}" 
-                                th:text="${major.majorName}"
-                                th:selected="${selectedMajorId == major.majorId}">
-                        </option>
-                    </select>
-                    
-                    <select name="subjectId" id="subjectFilter" class="form-control">
-                        <option value="">Tất cả môn học</option>
-                        <option th:each="subject : ${subjects}" 
-                                th:value="${subject.subjectId}" 
-                                th:text="${subject.subjectName}"
-                                th:selected="${selectedSubjectId == subject.subjectId}">
-                        </option>
-                    </select>
+                    <form th:action="@{/documents/search}" method="get" id="filterForm" style="display: flex; gap: 0.75rem; width: 100%;">
+                        <input type="hidden" name="keyword" th:value="${keyword}">
+                        <select name="majorId" id="majorFilter" class="form-control" onchange="submitFilterForm()" style="flex: 1;">
+                            <option value="">Tất cả chuyên ngành</option>
+                            <option th:each="major : ${majors}" 
+                                    th:value="${major.majorId}" 
+                                    th:text="${major.majorName}"
+                                    th:selected="${selectedMajorId == major.majorId}">
+                            </option>
+                        </select>
+                        
+                        <select name="sortBy" id="sortFilter" class="form-control" onchange="submitFilterForm()" style="flex: 1;">
+                            <option value="">Sắp xếp</option>
+                            <option value="download" th:selected="${selectedSortBy == 'download'}">Sắp xếp theo lượt tải về</option>
+                            <option value="name" th:selected="${selectedSortBy == 'name'}">Sắp xếp từ A - Z</option>
+                            <option value="latest" th:selected="${selectedSortBy == 'latest'}">Sắp xếp theo mới nhất</option>
+                        </select>
+                    </form>
                 </div>
             </section>
             
@@ -175,39 +185,53 @@
                     <p>Tìm thấy <strong th:text="${documents.totalElements}">0</strong> tài liệu</p>
                 </div>
                 
-                <div class="document-grid">
-                    <div th:each="doc : ${documents.content}" class="document-card">
-                        <div class="document-header">
-                            <h3 class="document-title">
+                <div class="document-grid-search">
+                    <div th:each="doc : ${documents.content}" class="document-card-search">
+                        <!-- Menu Button -->
+                        <button class="card-menu-btn" type="button">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        
+                        <!-- File Icon -->
+                        <div class="document-preview" 
+                             th:classappend="${doc.filePath != null && doc.filePath.toLowerCase().endsWith('.pdf') ? 'preview-pdf' : 
+                                          (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.doc') || doc.filePath.toLowerCase().endsWith('.docx'))) || doc.documentName.toLowerCase().endsWith('.doc') || doc.documentName.toLowerCase().endsWith('.docx') ? 'preview-doc' :
+                                          (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.xls') || doc.filePath.toLowerCase().endsWith('.xlsx'))) || doc.documentName.toLowerCase().endsWith('.xls') || doc.documentName.toLowerCase().endsWith('.xlsx') ? 'preview-xls' :
+                                          (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.ppt') || doc.filePath.toLowerCase().endsWith('.pptx'))) || doc.documentName.toLowerCase().endsWith('.ppt') || doc.documentName.toLowerCase().endsWith('.pptx') ? 'preview-ppt' : ''}">
+                            <div class="preview-placeholder">
+                                <i class="fas" 
+                                   th:classappend="${doc.filePath != null && doc.filePath.toLowerCase().endsWith('.pdf') ? 'fa-file-pdf' : 
+                                                    (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.doc') || doc.filePath.toLowerCase().endsWith('.docx'))) || doc.documentName.toLowerCase().endsWith('.doc') || doc.documentName.toLowerCase().endsWith('.docx') ? 'fa-file-word' :
+                                                    (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.xls') || doc.filePath.toLowerCase().endsWith('.xlsx'))) || doc.documentName.toLowerCase().endsWith('.xls') || doc.documentName.toLowerCase().endsWith('.xlsx') ? 'fa-file-excel' :
+                                                    (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.ppt') || doc.filePath.toLowerCase().endsWith('.pptx'))) || doc.documentName.toLowerCase().endsWith('.ppt') || doc.documentName.toLowerCase().endsWith('.pptx') ? 'fa-file-powerpoint' : 'fa-file'}"></i>
+                                <span class="preview-label" 
+                                      th:text="${doc.filePath != null && doc.filePath.toLowerCase().endsWith('.pdf') ? 'PDF' : 
+                                                (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.doc') || doc.filePath.toLowerCase().endsWith('.docx'))) || doc.documentName.toLowerCase().endsWith('.doc') || doc.documentName.toLowerCase().endsWith('.docx') ? 'DOC' :
+                                                (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.xls') || doc.filePath.toLowerCase().endsWith('.xlsx'))) || doc.documentName.toLowerCase().endsWith('.xls') || doc.documentName.toLowerCase().endsWith('.xlsx') ? 'XLS' :
+                                                (doc.filePath != null && (doc.filePath.toLowerCase().endsWith('.ppt') || doc.filePath.toLowerCase().endsWith('.pptx'))) || doc.documentName.toLowerCase().endsWith('.ppt') || doc.documentName.toLowerCase().endsWith('.pptx') ? 'PPT' : 'FILE'}">PDF</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Document Info -->
+                        <div class="document-info-search">
+                            <h3 class="document-title-search">
                                 <a th:href="@{/documents/view/{id}(id=${doc.documentId})}" 
                                    th:text="${doc.documentName}">
                                     Tên tài liệu
                                 </a>
                             </h3>
-                        </div>
-                        
-                        <div class="document-meta">
-                            <span class="badge" th:text="${doc.type.typeName}">Loại</span>
-                            <span class="badge badge-secondary" th:text="${doc.subject.subjectName}">Môn học</span>
-                        </div>
-                        
-                        <p class="document-description" th:text="${doc.description}">Mô tả</p>
-                        
-                        <div class="document-stats">
-                            <span><i class="fas fa-star text-warning"></i> 
-                                <span th:text="${#numbers.formatDecimal(doc.averageRating, 1, 1)}">0.0</span>
-                            </span>
-                            <span><i class="fas fa-eye"></i> <span th:text="${doc.viewCount}">0</span></span>
-                            <span><i class="fas fa-download"></i> <span th:text="${doc.downloadCount}">0</span></span>
-                        </div>
-                        
-                        <div class="document-actions">
-                            <a th:href="@{/documents/view/{id}(id=${doc.documentId})}" class="btn btn-sm btn-primary">
-                                <i class="fas fa-eye"></i> Xem chi tiết
-                            </a>
-                            <a th:href="@{/documents/download/{id}(id=${doc.documentId})}" class="btn btn-sm btn-success">
-                                <i class="fas fa-download"></i> Tải xuống
-                            </a>
+                            
+                            <div class="document-meta-search">
+                                <span class="meta-item">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <span th:text="${#numbers.formatDecimal(doc.averageRating != null ? doc.averageRating : 0.0, 1, 1)}">0.0</span>
+                                </span>
+                                <span class="meta-separator">•</span>
+                                <span class="meta-item">
+                                    <i class="fas fa-download"></i>
+                                    <span th:text="${doc.downloadCount}">0</span>
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -215,7 +239,7 @@
                 <!-- Pagination -->
                 <div th:if="${documents.totalPages > 1}" class="pagination">
                     <a th:if="${currentPage > 0}" 
-                       th:href="@{/documents/search(keyword=${keyword},page=${currentPage-1})}" 
+                       th:href="@{/documents/search(keyword=${keyword},majorId=${selectedMajorId},sortBy=${selectedSortBy},page=${currentPage-1})}" 
                        class="btn btn-outline">
                         <i class="fas fa-chevron-left"></i> Trước
                     </a>
@@ -225,7 +249,7 @@
                     </span>
                     
                     <a th:if="${currentPage < totalPages - 1}" 
-                       th:href="@{/documents/search(keyword=${keyword},page=${currentPage+1})}" 
+                       th:href="@{/documents/search(keyword=${keyword},majorId=${selectedMajorId},sortBy=${selectedSortBy},page=${currentPage+1})}" 
                        class="btn btn-outline">
                         Sau <i class="fas fa-chevron-right"></i>
                     </a>
@@ -254,18 +278,8 @@
             }
         }
         
-        function loadSubjects(majorId) {
-            if (majorId) {
-                fetch('/api/subjects/by-major/' + majorId)
-                    .then(response => response.json())
-                    .then(subjects => {
-                        const subjectFilter = document.getElementById('subjectFilter');
-                        subjectFilter.innerHTML = '<option value="">Tất cả môn học</option>';
-                        subjects.forEach(subject => {
-                            subjectFilter.innerHTML += `<option value="${subject.subjectId}">${subject.subjectName}</option>`;
-                        });
-                    });
-            }
+        function submitFilterForm() {
+            document.getElementById('filterForm').submit();
         }
     </script>
 </body>
